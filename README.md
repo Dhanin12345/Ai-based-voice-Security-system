@@ -399,3 +399,14 @@ VoiceGuard AI utilizes probabilistic machine-learning models to detect acoustic 
 <p align="center">
   <b>VoiceGuard AI</b> • Built with FastAPI, Librosa, Scikit-Learn & Modern Web Standards
 </p>
+<img width="926" height="499" alt="Screenshot 2026-09-24 185646" src="https://github.com/user-attachments/assets/e0e7a6a1-73ce-4599-b32f-7f2355281af5" />
+
+<img width="939" height="410" alt="Screenshot 2026-09-24 185952" src="https://github.com/user-attachments/assets/c04b216c-80ee-4d68-afab-76062d4f4267" />
+
+<img width="905" height="489" alt="Screenshot 2026-09-24 190031" src="https://github.com/user-attachments/assets/ff1918cd-d753-458e-ba78-817b986023f0" />
+
+<img width="930" height="493" alt="Screenshot 2026-09-24 190134" src="https://github.com/user-attachments/assets/10b848f4-5362-4eba-a924-cf5f0e3158bb" />
+
+<img width="947" height="480" alt="Screenshot 2026-09-24 190215" src="https://github.com/user-attachments/assets/6b3a524d-da3c-4df0-94eb-e95f0b30792d" />
+
+
