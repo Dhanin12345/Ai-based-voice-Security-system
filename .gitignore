@@ -55,3 +55,4 @@ backend/uploads/
 .idea/
 .DS_Store
 Thumbs.db
+YOUR_GITHUB_SSH_KEY.txt
