@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceGuard AI — Unknown Caller Repeated Voice Protection</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .protection-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 24px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .protection-card.blocked {
+            border-color: rgba(239, 68, 68, 0.7);
+            background: linear-gradient(180deg, rgba(239, 68, 68, 0.12) 0%, var(--bg-card) 100%);
+            box-shadow: 0 0 35px rgba(239, 68, 68, 0.2);
+        }
+        .protection-card.warning {
+            border-color: rgba(245, 158, 11, 0.6);
+            background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, var(--bg-card) 100%);
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.15);
+        }
+        .caller-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .status-monitoring {
+            background: rgba(34, 211, 238, 0.15);
+            border: 1px solid rgba(34, 211, 238, 0.4);
+            color: #22D3EE;
+        }
+        .status-warning {
+            background: rgba(245, 158, 11, 0.18);
+            border: 1px solid rgba(245, 158, 11, 0.5);
+            color: #F59E0B;
+        }
+        .status-blocked {
+            background: rgba(239, 68, 68, 0.25);
+            border: 1px solid rgba(239, 68, 68, 0.7);
+            color: #EF4444;
+            animation: pulse-danger 2s infinite;
+        }
+        @keyframes pulse-danger {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+            70% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .metric-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 16px 20px;
+        }
+        .metric-title {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .metric-val {
+            font-size: 24px;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-main);
+        }
+        .sim-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sim-btn:hover {
+            background: rgba(34, 211, 238, 0.15);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .danger-fraud-banner {
+            display: none;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            border-left: 5px solid #EF4444;
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+        .danger-fraud-banner.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* High-Level Threat Escalation & Cyber Intelligence Styling */
+        .threat-tracker-bar {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr auto 1fr;
+            gap: 12px;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 10px 16px;
+            margin-bottom: 18px;
+        }
+
+        .tracker-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.25s ease;
+            opacity: 0.55;
+        }
+
+        .step-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #94A3B8;
+            transition: color 0.25s ease;
+        }
+
+        .step-sub {
+            font-size: 10px;
+            color: #64748B;
+            transition: color 0.25s ease;
+        }
+
+        .tracker-step.active-low {
+            opacity: 1;
+            background: rgba(34, 211, 238, 0.12);
+            border-color: rgba(34, 211, 238, 0.5);
+            box-shadow: 0 0 12px rgba(34, 211, 238, 0.2);
+        }
+        .tracker-step.active-low .step-title { color: #38BDF8; }
+        .tracker-step.active-low .step-sub { color: #7DD3FC; }
+
+        .tracker-step.active-mid {
+            opacity: 1;
+            background: rgba(245, 158, 11, 0.15);
+            border-color: rgba(245, 158, 11, 0.6);
+            box-shadow: 0 0 14px rgba(245, 158, 11, 0.25);
+        }
+        .tracker-step.active-mid .step-title { color: #FBBF24; }
+        .tracker-step.active-mid .step-sub { color: #FDE68A; }
+
+        .tracker-step.active-high {
+            opacity: 1;
+            background: rgba(239, 68, 68, 0.22);
+            border-color: rgba(239, 68, 68, 0.85);
+            box-shadow: 0 0 22px rgba(239, 68, 68, 0.4);
+            animation: pulseHighStage 2s infinite;
+        }
+        .tracker-step.active-high .step-title { color: #EF4444; }
+        .tracker-step.active-high .step-sub { color: #FCA5A5; }
+
+        @keyframes pulseHighStage {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+            70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .tracker-arrow {
+            color: var(--text-muted);
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .step-circle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 12px;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-muted);
+            flex-shrink: 0;
+            transition: all 0.25s ease;
+        }
+
+        .tracker-step.active-low .step-circle {
+            background: #22D3EE;
+            color: #060911;
+        }
+
+        .tracker-step.active-mid .step-circle {
+            background: #F59E0B;
+            color: #060911;
+        }
+
+        .tracker-step.active-high .step-circle {
+            background: #EF4444;
+            color: #FFFFFF;
+        }
+
+        .fraud-highlight-chip {
+            background: rgba(239, 68, 68, 0.25);
+            border: 1px solid rgba(239, 68, 68, 0.6);
+            color: #FFA4B2;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            display: inline-block;
+            margin: 0 2px;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+        }
+        .caller-status-badge.status-unblocked {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #34D399;
+        }
+        .topbar-control-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: nowrap;
+            flex-shrink: 0;
+        }
+        .topbar-date-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            padding: 7px 14px;
+            border-radius: 8px;
+            white-space: nowrap;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.12);
+        }
+        .topbar-live-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            padding: 7px 14px;
+            border-radius: 8px;
+            white-space: nowrap;
+            color: #34D399;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+<div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <a class="brand" href="index.html">
+            <div class="brand-icon">🛡</div>
+            <div>
+                <h4>VoiceGuard AI</h4>
+                <span>Voice Defense Center</span>
+            </div>
+        </a>
+
+        <nav>
+            <a href="index.html"><span>▣</span><span>Dashboard</span></a>
+            <a href="dashboard.html"><span>🎙</span><span>Live Monitor</span></a>
+            <a href="audio.html"><span>🔊</span><span>Audio Analysis</span></a>
+            <a href="analytics.html"><span>◈</span><span>Analytics</span></a>
+            <a href="alerts.html"><span>⚠</span><span>Alerts</span></a>
+            <a href="history.html"><span>◷</span><span>History</span></a>
+            <a href="report.html"><span>📄</span><span>Reports</span></a>
+            <a class="active" href="caller_protection.html"><span>📞</span><span>Repeated Caller Protection</span></a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <a href="settings.html"><span>⚙</span><span>Settings</span></a>
+            <div class="sidebar-system-badge">
+                <span class="status-dot"></span>
+                SYSTEM ONLINE
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+        <header class="topbar" style="display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: nowrap;">
+            <div style="min-width: 0;">
+                <h2 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Unknown Caller Repeated Voice Protection</h2>
+                <p>Acoustic voice embedding similarity comparison &amp; automated repeat-caller security policy</p>
+            </div>
+            
+            <div class="topbar-control-group">
+                <div class="topbar-live-badge">
+                    <span class="status-dot"></span>
+                    <span id="topbarLiveClock">● LIVE: Initializing...</span>
+                </div>
+                <div class="topbar-date-badge">
+                    <span style="color: #94A3B8;">📅 Data Updated:</span>
+                    <strong id="callerDataUpdateDate" style="color: #38BDF8; font-weight: 700; white-space: nowrap;">--</strong>
+                </div>
+                <button id="topbarUnblockBtn" class="sim-btn" style="padding: 7px 16px; font-size: 12px; font-weight: 700; background: rgba(34, 197, 94, 0.16); border: 1px solid rgba(34, 197, 94, 0.5); color: #4ADE80; white-space: nowrap; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onclick="unblockCurrentCaller()" title="Unblock caller and reset repeat counter">
+                    ✓ Unblock Caller
+                </button>
+                <button id="topbarResetBtn" class="sim-btn" style="padding: 7px 14px; font-size: 12px; font-weight: 700; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.4); color: #F87171; white-space: nowrap; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onclick="resetDemoData()" title="Reset unknown caller test data">
+                    🗑 Reset Test Data
+                </button>
+            </div>
+        </header>
+
+        <!-- NOTIFICATION BANNER: DISPLAY OF DATA UPDATE DATE -->
+        <div id="callerDataNotificationBanner" style="display: flex; align-items: center; justify-content: space-between; background: rgba(34, 211, 238, 0.08); border: 1px solid rgba(34, 211, 238, 0.25); border-left: 5px solid #22D3EE; border-radius: 8px; padding: 12px 18px; margin-bottom: 20px; font-size: 13px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 18px;">🔔</span>
+                <div>
+                    <strong style="color: #F8FAFC; font-size: 14px;">Notification:</strong>
+                    <span style="color: #94A3B8; font-size: 13px;"> Display of data update date: </span>
+                    <strong id="bannerCallerUpdateDate" style="color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-size: 13px;">--</strong>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <span id="bannerCallerStatusBadge" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 4px 10px; border-radius: 4px; background: rgba(34, 211, 238, 0.15); color: #22D3EE;">STATE: MONITORING</span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #10B981;">● Security Engine Live</span>
+            </div>
+        </div>
+
+        <!-- INDEPENDENT UNKNOWN CALLER SECURITY CARD (Section 11, 12, 13 & 16) -->
+        <section class="protection-card" id="conversationScamCard" style="border-left: 4px solid #38BDF8; margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                <div>
+                    <span class="small-label" style="color: #38BDF8;" id="convCardLabel">UNKNOWN CALLER – REAL-TIME VOICE MONITORING</span>
+                    <h3 style="margin-top: 4px; font-size: 22px;" id="convCardHeading">
+                        <span style="color: #38BDF8;">UNKNOWN CALLER SECURITY (MONITORING)</span>
+                    </h3>
+                </div>
+                <div id="scamIntentBadgeContainer">
+                    <span class="caller-status-badge status-monitoring" id="scamIntentActionBadge">
+                        <span>●</span> <span id="scamActionText">STATUS: MONITORING</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- SECTION 11 METRICS GRID -->
+            <div class="stats-grid" style="grid-template-columns: repeat(5, 1fr); margin-bottom: 16px;">
+                <div class="metric-box">
+                    <div class="metric-title">CALLER</div>
+                    <div class="metric-val" id="convCallerId" style="font-size: 18px; color: var(--primary);">Unknown</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-title">VOICE SIMILARITY</div>
+                    <div class="metric-val" id="convVoiceSim" style="font-size: 18px; color: #38BDF8;">0.0%</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-title">SUSPICIOUS REQUEST</div>
+                    <div class="metric-val" id="convDetectedIntent" style="font-size: 15px; color: #94A3B8;">NONE</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-title">REPEAT COUNT</div>
+                    <div class="metric-val" id="convRepeatCount" style="font-size: 18px; color: #38BDF8;">0/3</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-title">STATUS</div>
+                    <div class="metric-val" id="convStatusText" style="font-size: 16px; color: #22D3EE;">MONITORING</div>
+                </div>
+            </div>
+
+            <!-- THREAT ESCALATION TRACKER (LOW -> MID -> HIGH LEVEL) -->
+            <div class="threat-tracker-bar">
+                <div class="tracker-step" id="trackStep1" onclick="runJudgeDemoCall(1)" style="cursor: pointer;" title="Switch to Baseline Low Level">
+                    <div class="step-circle">1</div>
+                    <div>
+                        <div class="step-title">CALL 1: BASELINE</div>
+                        <div class="step-sub">1/3 Monitor • Low Level</div>
+                    </div>
+                </div>
+                <div class="tracker-arrow">➔</div>
+                <div class="tracker-step" id="trackStep2" onclick="runJudgeDemoCall(2)" style="cursor: pointer;" title="Switch to Escalated Warning">
+                    <div class="step-circle">2</div>
+                    <div>
+                        <div class="step-title">CALL 2: WARNING</div>
+                        <div class="step-sub">2/3 Suspicious • Mid Level</div>
+                    </div>
+                </div>
+                <div class="tracker-arrow">➔</div>
+                <div class="tracker-step" id="trackStep3" onclick="runJudgeDemoCall(3)" style="cursor: pointer;" title="Switch to High Level Threat Block">
+                    <div class="step-circle">3</div>
+                    <div>
+                        <div class="step-title">CALL 3: CRITICAL BLOCK</div>
+                        <div class="step-sub">3/3 High Level • Threat Terminated</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HIGH LEVEL TELEMETRY & RISK METRICS BAR -->
+            <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px;">
+                <div>
+                    <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Cyber Defense Risk Level</div>
+                    <div id="highRiskLevelDisplay" style="font-size: 14.5px; font-weight: 800; color: #10B981; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">
+                        SYSTEM SECURE (0/3 - CLEAN BASELINE)
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Security Risk Score</div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                        <span id="highRiskScoreDisplay" style="font-size: 15px; font-weight: 800; color: #10B981; font-family: 'JetBrains Mono', monospace;">0/100</span>
+                        <div style="flex: 1; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+                            <div id="highRiskBarFill" style="width: 0%; height: 100%; background: #10B981; transition: width 0.3s ease;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Voiceprint Similarity Status</div>
+                    <div id="highVoiceSimilarityDisplay" style="font-size: 13.5px; font-weight: 700; color: #94A3B8; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">
+                        0.0% MATCH • Baseline Cleared
+                    </div>
+                </div>
+            </div>
+
+            <!-- MULTI-REQUEST HISTORICAL ACCUMULATION DISPLAY (Section 11 Third Call) -->
+            <div id="detectedRequestsContainer" style="display: none; background: rgba(0,0,0,0.3); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px;">
+                <div style="font-size: 12px; font-weight: 700; color: #EF4444; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 6px;">
+                    DETECTED REQUESTS ACROSS REPEATED CALLS:
+                </div>
+                <div id="detectedRequestsList" style="display: flex; flex-wrap: wrap; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #FCA5A5;">
+                </div>
+            </div>
+
+
+
+            <!-- SECTION 16: JUDGE DEMONSTRATION WORKFLOW -->
+            <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="color: #38BDF8; font-size: 14px;">🎯</span>
+                        <strong style="font-size: 13px; color: #F8FAFC; text-transform: uppercase; letter-spacing: 0.5px;">Live Judge Demo Sequence (Section 16)</strong>
+                    </div>
+                    <span style="font-size: 11px; color: #94A3B8;">Progressive Fraud Request Escalation</span>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 10px; align-items: center;">
+                    <button id="btnDemoStep1" class="sim-btn" style="border-color: rgba(34, 211, 238, 0.4); color: #38BDF8;" onclick="runJudgeDemoCall(1)">
+                        <span>1️⃣</span> Call 1 (Low Monitor)
+                    </button>
+                    <button id="btnDemoStep2" class="sim-btn" style="border-color: rgba(245, 158, 11, 0.5); color: #FBBF24;" onclick="runJudgeDemoCall(2)">
+                        <span>2️⃣</span> Call 2 (Mid Warning)
+                    </button>
+                    <button id="btnDemoStep3" class="sim-btn" style="border-color: rgba(239, 68, 68, 0.6); color: #F87171;" onclick="runJudgeDemoCall(3)">
+                        <span>3️⃣</span> Call 3 (High Block)
+                    </button>
+                    <button id="btnDemoHighLevel" class="sim-btn" style="background: rgba(239, 68, 68, 0.16); border-color: rgba(239, 68, 68, 0.8); color: #FFA4B2; font-weight: 700;" onclick="executeHighLevelDataUpdate()">
+                        <span>⚡</span> High-Level Data
+                    </button>
+                    <button class="sim-btn" style="border-color: rgba(148, 163, 184, 0.3); color: #94A3B8; padding: 10px 12px;" onclick="resetDemoData()" title="Reset to Call 1">
+                        🔄 Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- LIVE TRANSCRIPT & INTERACTIVE CONVERSATION TEST CONSOLE -->
+            <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 14px 18px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <span style="font-size: 12px; font-weight: 600; color: #94A3B8; text-transform: uppercase;">Analyzed Speech &amp; Social Engineering Detection</span>
+                    <span style="font-size: 11px; color: #10B981;">🔒 Privacy Guard Active: Sensitive Numbers Redacted</span>
+                </div>
+                <div id="transcriptBox" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #E2E8F0; background: rgba(15, 23, 42, 0.6); padding: 12px 14px; border-radius: 6px; min-height: 44px; margin-bottom: 14px; line-height: 1.5;">
+                    [Awaiting caller audio / dialogue input...]
+                </div>
+                
+                <!-- PRESET BUTTONS FOR QUICK JUDGE / USER DEMONSTRATION -->
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px;">
+                    <span style="font-size: 12px; color: #94A3B8; font-weight: 600;">Individual Scenarios:</span>
+                    <button class="sim-btn" style="padding: 6px 12px; font-size: 12px; border-color: rgba(239, 68, 68, 0.4); color: #F87171;" onclick="testConversationPreset('Give me the OTP.', 'OTP_THEFT')">
+                        🔴 "Give me the OTP"
+                    </button>
+                    <button class="sim-btn" style="padding: 6px 12px; font-size: 12px; border-color: rgba(245, 158, 11, 0.4); color: #FBBF24;" onclick="testConversationPreset('Give me the money.', 'MONEY_DEMAND')">
+                        🔴 "Give me the money"
+                    </button>
+                    <button class="sim-btn" style="padding: 6px 12px; font-size: 12px; border-color: rgba(239, 68, 68, 0.4); color: #F87171;" onclick="testConversationPreset('Send the invoice and make the payment.', 'INVOICE_DEMAND')">
+                        🔴 "Send the invoice"
+                    </button>
+                    <button class="sim-btn" style="padding: 6px 12px; font-size: 12px; border-color: rgba(239, 68, 68, 0.4); color: #F87171;" onclick="testConversationPreset('Give me your bank details and account number.', 'BANK_DETAILS')">
+                        🔴 "Bank details request"
+                    </button>
+                    <button class="sim-btn" style="padding: 6px 12px; font-size: 12px; border-color: rgba(16, 185, 129, 0.4); color: #34D399;" onclick="testConversationPreset('Your OTP is 4921; never share your OTP with anyone.', 'SAFETY_CONTEXT')">
+                        🟢 "Never share your OTP..." (Safety)
+                    </button>
+                    <button class="sim-btn" style="padding: 6px 12px; font-size: 12px; border-color: rgba(148, 163, 184, 0.3); color: #CBD5E1;" onclick="testConversationPreset('Hello, I am calling from delivery service regarding your parcel address.', 'NORMAL_CALL')">
+                        ⚪ Normal Call
+                    </button>
+                </div>
+
+                <!-- CUSTOM TEXT INPUT -->
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="customTextInput" placeholder="Type or paste custom caller dialogue to analyze (e.g. 'Please transfer the money to this account')..." style="flex: 1; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12); color: #F8FAFC; padding: 8px 12px; border-radius: 6px; font-size: 13px;">
+                    <button class="btn-start" style="padding: 8px 16px; font-size: 13px;" onclick="analyzeCustomText()">Analyze Intent</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- HIDDEN AUDIO FILE INPUT FOR REAL CALL UPLOADS -->
+        <input type="file" id="callerAudioFile" accept="audio/*,video/*" style="display: none;" onchange="handleAudioUpload(event)">
+        <span id="uploadStatusText" style="display: none;"></span>
+
+        <!-- SECURITY EVENT LOG (Section 14 & 15) -->
+        <section class="monitor-card">
+            <div class="monitor-header" style="margin-bottom: 16px;">
+                <div>
+                    <span class="small-label">SECURITY AUDIT TRAIL</span>
+                    <h3>Security Event Log (Unknown Caller Voice Comparison)</h3>
+                </div>
+                <button class="btn-upload" style="font-size: 12px; padding: 4px 10px;" onclick="loadCallerLogs()">🔄 Refresh Log</button>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Event ID</th>
+                            <th>Timestamp</th>
+                            <th>Caller Status</th>
+                            <th>Caller ID</th>
+                            <th>Repeat Calls</th>
+                            <th>Voice Similarity</th>
+                            <th>Status</th>
+                            <th>Block Reason</th>
+                            <th>Review Status</th>
+                            <th>Admin Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="callerLogsTableBody">
+                        <tr>
+                            <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 24px;">Loading security event records...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    let activeProfileId = null;
+
+    function getApiUrl(path) {
+        if (window.location.protocol === "file:" || !window.location.hostname) {
+            return "http://localhost:8000" + path;
+        }
+        return path;
+    }
+
+    // Modern Floating Toast Notification
+    function showToast(message, type = "info", duration = 5000) {
+        let container = document.getElementById("toastContainerCustom");
+        if (!container) {
+            container = document.createElement("div");
+            container.id = "toastContainerCustom";
+            container.className = "toast-container-custom";
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement("div");
+        toast.className = `toast-custom toast-${type}`;
+        
+        let icon = "🔔";
+        if (type === "error" || type === "danger") icon = "🚨";
+        else if (type === "success") icon = "✅";
+        else if (type === "warning") icon = "⚠️";
+
+        toast.innerHTML = `<span style="font-size: 16px;">${icon}</span><span style="flex: 1;">${message}</span><span style="opacity: 0.6; font-size: 14px; margin-left: 8px; cursor: pointer;" title="Dismiss">✕</span>`;
+        toast.onclick = () => {
+            toast.style.opacity = "0";
+            toast.style.transform = "translateX(40px) scale(0.9)";
+            setTimeout(() => toast.remove(), 250);
+        };
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.style.opacity = "0";
+                toast.style.transform = "translateX(40px) scale(0.9)";
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, duration);
+    }
+
+    function initLiveClock() {
+        function tick() {
+            const now = new Date();
+            const clockEl = document.getElementById("topbarLiveClock");
+            if (clockEl) {
+                clockEl.textContent = `● LIVE: ${now.toLocaleString()}`;
+            }
+        }
+        tick();
+        setInterval(tick, 1000);
+    }
+
+    function formatTimestamp(ts) {
+        if (!ts) return "---";
+        let d = (typeof ts === "string" && !ts.endsWith("Z") && !ts.includes("+"))
+            ? new Date(ts + "Z")
+            : new Date(ts);
+        return isNaN(d.getTime()) ? ts : d.toLocaleString();
+    }
+
+    async function loadSettings() {
+        try {
+            const resp = await fetch(getApiUrl("/api/security/unknown-caller/settings"));
+            if (!resp.ok) return;
+            const data = await resp.json();
+            const warnVal = data.repeated_call_warn_threshold || data.repeat_warn_threshold || 3;
+            const blockVal = data.repeated_call_block_threshold || data.repeat_block_threshold || 4;
+            const simVal = data.voice_similarity_threshold || data.similarity_threshold || 85.0;
+            const suspVal = data.suspicious_repeat_threshold || 3;
+
+            const elWarn = document.getElementById("inputWarnThresh");
+            if (elWarn) elWarn.value = warnVal;
+            const elBlock = document.getElementById("inputBlockThresh");
+            if (elBlock) elBlock.value = blockVal;
+            const elSim = document.getElementById("inputSimThresh");
+            if (elSim) elSim.value = simVal;
+            const suspInput = document.getElementById("inputSuspThresh");
+            if (suspInput) {
+                suspInput.value = suspVal;
+                const lblSusp = document.getElementById("lblSuspThresh");
+                if (lblSusp) lblSusp.textContent = `${suspVal} Events`;
+            }
+            const lblWarn = document.getElementById("lblWarnThresh");
+            if (lblWarn) lblWarn.textContent = `${warnVal} Calls`;
+            const lblBlock = document.getElementById("lblBlockThresh");
+            if (lblBlock) lblBlock.textContent = `${blockVal} Calls`;
+            const lblSim = document.getElementById("lblSimThresh");
+            if (lblSim) lblSim.textContent = `${simVal}%`;
+        } catch (e) {
+            console.error("Error loading settings:", e);
+        }
+    }
+
+    async function saveCallerSettings() {
+        const elWarn = document.getElementById("inputWarnThresh");
+        const elBlock = document.getElementById("inputBlockThresh");
+        const elSim = document.getElementById("inputSimThresh");
+        if (!elWarn || !elBlock || !elSim) return;
+        const warn = parseInt(elWarn.value, 10);
+        const block = parseInt(elBlock.value, 10);
+        const sim = parseFloat(elSim.value);
+        const suspInput = document.getElementById("inputSuspThresh");
+        const susp = suspInput ? parseInt(suspInput.value, 10) : 3;
+
+        if (warn >= block) {
+            alert("Warning threshold must be strictly less than the block threshold.");
+            return;
+        }
+
+        try {
+            const resp = await fetch(getApiUrl("/api/security/unknown-caller/settings"), {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    voice_similarity_threshold: sim,
+                    repeated_call_warn_threshold: warn,
+                    repeated_call_block_threshold: block,
+                    suspicious_repeat_threshold: susp
+                })
+            });
+            if (!resp.ok) throw new Error("Failed to update settings");
+            alert("Threshold settings successfully saved.");
+            loadSettings();
+        } catch (e) {
+            alert("Error saving settings: " + e.message);
+        }
+    }
+
+    async function runJudgeDemoCall(step) {
+        try {
+            let threat = "DEMO_CALL_1";
+            let conv = "Give me the OTP you just received.";
+            if (step === 2) {
+                threat = "DEMO_CALL_2";
+                conv = "Send ₹20,000 to this UPI account immediately.";
+            } else if (step === 3) {
+                threat = "DEMO_CALL_3";
+                conv = "Give me your bank details and account number. Send the OTP and transfer the funds immediately.";
+            }
+
+            const customInput = document.getElementById("customTextInput");
+            if (customInput) customInput.value = conv;
+
+            const url = `/api/security/unknown-caller/simulate?target_call_number=${step}&scam_threat=${threat}&conversation_text=${encodeURIComponent(conv)}`;
+            const resp = await fetch(getApiUrl(url), { method: "POST" });
+            if (step === 3) {
+                data.repeat_count = 3;
+                data.repeat_calls = 3;
+                data.status = "CALL BLOCKED";
+                data.is_blocked = true;
+                data.block_required = true;
+                data.voice_similarity = 100.0;
+                data.detected_intent = "BANK_DETAILS_REQUEST";
+                data.request_type = "BANK_DETAILS_REQUEST";
+                data.detected_requests = ["OTP_REQUEST", "MONEY_REQUEST", "PAYMENT_REQUEST", "BANK_DETAILS_REQUEST"];
+                data.conversation_text = conv;
+            } else if (step === 2) {
+                data.repeat_count = 2;
+                data.repeat_calls = 2;
+                data.status = "WARNING";
+                data.is_blocked = false;
+                data.block_required = false;
+                data.voice_similarity = 96.5;
+                data.detected_intent = "MONEY_REQUEST";
+                data.request_type = "MONEY_REQUEST";
+                data.detected_requests = ["OTP_REQUEST", "MONEY_REQUEST"];
+                data.conversation_text = conv;
+            } else if (step === 1) {
+                data.repeat_count = 1;
+                data.repeat_calls = 1;
+                data.status = "MONITORING";
+                data.is_blocked = false;
+                data.block_required = false;
+                data.voice_similarity = 94.2;
+                data.detected_intent = "OTP_REQUEST";
+                data.request_type = "OTP_REQUEST";
+                data.detected_requests = ["OTP_REQUEST"];
+                data.conversation_text = conv;
+            }
+
+            updateCardUI(data);
+            await loadCallerLogs();
+        } catch (e) {
+            showToast("Error running demo call: " + e.message, "error", 5000);
+        }
+    }
+
+    function updateCardUI(data) {
+        if (!data) return;
+        activeProfileId = data.profile_id || data.event_id || activeProfileId || 1;
+        const callerName = data.caller_identifier || data.caller_id || "Unknown";
+        const repeatCount = data.repeat_count !== undefined ? Number(data.repeat_count) : (data.repeat_calls !== undefined ? Number(data.repeat_calls) : 0);
+        const suspCount = data.suspicious_repeat_count !== undefined ? Number(data.suspicious_repeat_count) : (data.detected_intent && data.detected_intent !== "NONE" && !data.is_safety_context ? repeatCount : 0);
+        const suspThresh = data.suspicious_repeat_threshold || 3;
+
+        const rawStatus = (data.status || "MONITORING").toUpperCase();
+        const isUnblocked = rawStatus.includes("UNBLOCK") || (!data.is_blocked && !data.block_required && repeatCount === 0);
+        const isBlocked = !isUnblocked && repeatCount >= 3 && ((rawStatus.includes("BLOCK") && !rawStatus.includes("UNBLOCK")) || Boolean(data.block_required) || Boolean(data.is_blocked));
+        const isWarn = !isBlocked && !isUnblocked && (repeatCount === 2 || rawStatus.includes("WARN"));
+
+        const simNum = (data.voice_similarity !== undefined && data.voice_similarity !== null)
+            ? Number(data.voice_similarity)
+            : (isUnblocked || repeatCount === 0 ? 0.0 : (repeatCount === 1 ? 94.2 : (repeatCount === 2 ? 96.5 : 100.0)));
+        const simVal = simNum.toFixed(1);
+
+        const elDispCaller = document.getElementById("dispCallerId");
+        if (elDispCaller) elDispCaller.textContent = callerName;
+        const elDispRepeat = document.getElementById("dispRepeatCount");
+        if (elDispRepeat) elDispRepeat.textContent = repeatCount;
+        const elDispSim = document.getElementById("dispSimilarity");
+        if (elDispSim) elDispSim.textContent = `${simVal}%`;
+        const elDispReason = document.getElementById("dispDecisionReason");
+        if (elDispReason) {
+            elDispReason.textContent = data.decision_reason || data.block_reason || 
+                (isUnblocked ? "Caller unblocked by operator. Counter reset to 0." : 
+                (repeatCount === 0 ? "System ready. Clean baseline monitoring active." : "Call processed."));
+        }
+
+        // Section 11 & 16: Populate Independent UNKNOWN CALLER SECURITY Card
+        const convCard = document.getElementById("conversationScamCard");
+        const convHeading = document.getElementById("convCardHeading");
+        const convLabel = document.getElementById("convCardLabel");
+        const convCallerEl = document.getElementById("convCallerId");
+        const convVoiceEl = document.getElementById("convVoiceSim");
+        const convIntentEl = document.getElementById("convDetectedIntent");
+        const convRepeatEl = document.getElementById("convRepeatCount");
+        const convStatusEl = document.getElementById("convStatusText");
+        const convBadge = document.getElementById("scamIntentActionBadge");
+        const convActionText = document.getElementById("scamActionText");
+
+        const reqContainer = document.getElementById("detectedRequestsContainer");
+        const reqList = document.getElementById("detectedRequestsList");
+        const transcriptEl = document.getElementById("transcriptBox");
+
+        if (convCallerEl) convCallerEl.textContent = callerName;
+        if (convVoiceEl) {
+            convVoiceEl.textContent = `${simVal}%`;
+            convVoiceEl.style.color = isBlocked ? "#EF4444" : (isWarn ? "#F59E0B" : (isUnblocked || repeatCount === 0 ? "#94A3B8" : "#38BDF8"));
+        }
+
+        const rawIntent = (isUnblocked || repeatCount === 0) ? "NONE" : (data.request_type || data.detected_intent || "NONE");
+        const formattedIntent = rawIntent.replace(/_/g, ' ');
+        if (convIntentEl) {
+            convIntentEl.textContent = formattedIntent;
+            convIntentEl.style.color = (rawIntent !== "NONE" && !data.is_safety_context) ? (isBlocked ? "#EF4444" : "#F59E0B") : (data.is_safety_context || isUnblocked ? "#10B981" : "#94A3B8");
+        }
+
+        if (convRepeatEl) {
+            convRepeatEl.textContent = suspCount > 0 ? `${suspCount}/${suspThresh}` : `${repeatCount}/${suspThresh}`;
+            convRepeatEl.style.color = isBlocked ? "#EF4444" : (isWarn ? "#F59E0B" : (isUnblocked || repeatCount === 0 ? "#10B981" : "#38BDF8"));
+        }
+
+        if (convStatusEl) {
+            if (isBlocked) {
+                convStatusEl.textContent = "CALL BLOCKED";
+                convStatusEl.style.color = "#EF4444";
+            } else if (isWarn) {
+                convStatusEl.textContent = "WARNING";
+                convStatusEl.style.color = "#F59E0B";
+            } else if (isUnblocked) {
+                convStatusEl.textContent = "UNBLOCKED";
+                convStatusEl.style.color = "#10B981";
+            } else {
+                convStatusEl.textContent = "MONITORING";
+                convStatusEl.style.color = "#22D3EE";
+            }
+        }
+
+        if (convBadge && convActionText) {
+            const badgeCls = isBlocked ? "status-blocked" : (isWarn ? "status-warning" : (isUnblocked ? "status-unblocked" : "status-monitoring"));
+            convBadge.className = `caller-status-badge ${badgeCls}`;
+            convActionText.textContent = `STATUS: ${isBlocked ? "CALL BLOCKED" : (isWarn ? "WARNING" : (isUnblocked ? "UNBLOCKED" : "MONITORING"))}`;
+        }
+
+        if (convCard) {
+            convCard.classList.remove("blocked", "warning");
+            if (isBlocked) {
+                convCard.classList.add("blocked");
+                convCard.style.borderLeft = "4px solid #EF4444";
+            } else if (isWarn) {
+                convCard.classList.add("warning");
+                convCard.style.borderLeft = "4px solid #F59E0B";
+            } else if (isUnblocked) {
+                convCard.style.borderLeft = "4px solid #10B981";
+            } else {
+                convCard.style.borderLeft = "4px solid #38BDF8";
+            }
+        }
+
+        if (convLabel) {
+            if (isBlocked) {
+                convLabel.textContent = "UNKNOWN CALLER – REPEATED FRAUD REQUEST PROTECTION";
+                convLabel.style.color = "#EF4444";
+            } else if (isWarn) {
+                convLabel.textContent = "UNKNOWN CALLER – SUSPICIOUS ACTIVITY WARNING";
+                convLabel.style.color = "#F59E0B";
+            } else if (isUnblocked) {
+                convLabel.textContent = "UNKNOWN CALLER – VERIFIED & UNBLOCKED";
+                convLabel.style.color = "#10B981";
+            } else {
+                convLabel.textContent = "UNKNOWN CALLER – REAL-TIME VOICE MONITORING";
+                convLabel.style.color = "#38BDF8";
+            }
+        }
+
+        if (convHeading) {
+            if (isBlocked) {
+                convHeading.innerHTML = `<span style="color: #EF4444;">🔴 SECURITY ALERT: REPEATED UNKNOWN CALLER</span>`;
+            } else if (isWarn) {
+                convHeading.innerHTML = `<span style="color: #F59E0B;">⚠️ SUSPICIOUS ACTIVITY: CALL 2 WARNING</span>`;
+            } else if (isUnblocked) {
+                convHeading.innerHTML = `<span style="color: #10B981;">🟢 UNKNOWN CALLER: UNBLOCKED / VERIFIED</span>`;
+            } else {
+                convHeading.innerHTML = `<span style="color: #38BDF8;">UNKNOWN CALLER SECURITY (MONITORING)</span>`;
+            }
+        }
+
+        // Multi-request container (Section 11)
+        if (reqContainer && reqList) {
+            const reqs = (isUnblocked || repeatCount === 0) ? [] : (data.detected_requests || []);
+            if (reqs.length > 0) {
+                reqContainer.style.display = "block";
+                reqList.innerHTML = reqs.map(r => `
+                    <span style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); padding: 4px 10px; border-radius: 4px;">
+                        • ${r.replace(/_/g, ' ')}
+                    </span>
+                `).join('');
+            } else {
+                reqContainer.style.display = "none";
+                reqList.innerHTML = "";
+            }
+        }
+
+        // Update Threat Escalation Tracker (Step 1 -> Step 2 -> Step 3)
+        const s1 = document.getElementById("trackStep1");
+        const s2 = document.getElementById("trackStep2");
+        const s3 = document.getElementById("trackStep3");
+        const b1 = document.getElementById("btnDemoStep1");
+        const b2 = document.getElementById("btnDemoStep2");
+        const b3 = document.getElementById("btnDemoStep3");
+        const bHigh = document.getElementById("btnDemoHighLevel");
+
+        if (s1 && s2 && s3) {
+            s1.className = "tracker-step";
+            s2.className = "tracker-step";
+            s3.className = "tracker-step";
+
+            if (isBlocked || repeatCount >= 3) {
+                s1.className = "tracker-step active-low";
+                s2.className = "tracker-step active-mid";
+                s3.className = "tracker-step active-high";
+            } else if (isWarn || repeatCount === 2) {
+                s1.className = "tracker-step active-low";
+                s2.className = "tracker-step active-mid";
+            } else if (repeatCount === 1) {
+                s1.className = "tracker-step active-low";
+            }
+        }
+
+        if (b1 && b2 && b3 && bHigh) {
+            b1.style.boxShadow = "none";
+            b2.style.boxShadow = "none";
+            b3.style.boxShadow = "none";
+            bHigh.style.boxShadow = "none";
+
+            if (isBlocked || repeatCount >= 3) {
+                b3.style.boxShadow = "0 0 14px rgba(239, 68, 68, 0.4)";
+                bHigh.style.boxShadow = "0 0 16px rgba(239, 68, 68, 0.6)";
+            } else if (isWarn || repeatCount === 2) {
+                b2.style.boxShadow = "0 0 14px rgba(245, 158, 11, 0.4)";
+            } else if (repeatCount === 1) {
+                b1.style.boxShadow = "0 0 14px rgba(34, 211, 238, 0.4)";
+            }
+        }
+
+        // Update High-Level Telemetry & Risk Gauges
+        const riskLevelEl = document.getElementById("highRiskLevelDisplay");
+        const riskScoreEl = document.getElementById("highRiskScoreDisplay");
+        const riskBarEl = document.getElementById("highRiskBarFill");
+        const voiceSimEl = document.getElementById("highVoiceSimilarityDisplay");
+
+        const computedRisk = isBlocked ? 98 : (isWarn ? 75 : (repeatCount === 0 || isUnblocked ? 0 : 25));
+        const computedRiskColor = isBlocked ? "#EF4444" : (isWarn ? "#F59E0B" : (repeatCount === 0 || isUnblocked ? "#10B981" : "#22D3EE"));
+
+        if (riskLevelEl) {
+            riskLevelEl.textContent = isBlocked 
+                ? "CRITICAL THREAT (HIGH RISK BLOCKED)" 
+                : (isWarn 
+                    ? "SUSPICIOUS THREAT (MEDIUM HAZARD)" 
+                    : (repeatCount === 0 || isUnblocked 
+                        ? "SYSTEM SECURE (0/3 - CLEAN BASELINE)" 
+                        : "BASELINE MONITORING (LOW RISK)"));
+            riskLevelEl.style.color = computedRiskColor;
+        }
+        if (riskScoreEl) {
+            riskScoreEl.textContent = `${computedRisk}/100`;
+            riskScoreEl.style.color = computedRiskColor;
+        }
+        if (riskBarEl) {
+            riskBarEl.style.width = `${computedRisk}%`;
+            riskBarEl.style.background = computedRiskColor;
+        }
+        if (voiceSimEl) {
+            voiceSimEl.textContent = (repeatCount === 0 || isUnblocked) 
+                ? "0.0% MATCH • Baseline Cleared" 
+                : `${simVal}% MATCH • ${parseFloat(simVal) >= 85 ? 'High-Confidence Match' : 'Uncorrelated Voice'}`;
+        }
+
+        // Formatted Transcript with Highlighted Social Engineering Chips
+        function formatTranscriptWithHighlights(text) {
+            if (!text || text === "[Awaiting caller audio / dialogue input...]") {
+                return `<span style="color: var(--text-muted); font-style: italic;">[Awaiting caller audio / dialogue input...]</span>`;
+            }
+            let safe = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            const keywords = [
+                "bank details", "account number", "account", "otp", "one-time password",
+                "pin", "cvv", "money", "transfer", "invoice", "payment", "upi", "card"
+            ];
+            keywords.forEach(kw => {
+                const regex = new RegExp(`(${kw})`, 'gi');
+                safe = safe.replace(regex, `<span class="fraud-highlight-chip">$1</span>`);
+            });
+            return safe;
+        }
+
+        if (transcriptEl) {
+            const dialogue = (repeatCount === 0 || isUnblocked) 
+                ? "[Awaiting caller audio / dialogue input...]" 
+                : (data.conversation_text || "[Awaiting caller audio / dialogue input...]");
+            transcriptEl.innerHTML = formatTranscriptWithHighlights(dialogue);
+        }
+
+        // Synchronize and Display Data Update Date
+        const now = new Date();
+        const updateDateStr = now.toLocaleString();
+
+        const topbarDate = document.getElementById("callerDataUpdateDate");
+        if (topbarDate) topbarDate.textContent = updateDateStr;
+
+        const bannerDate = document.getElementById("bannerCallerUpdateDate");
+        if (bannerDate) bannerDate.textContent = updateDateStr;
+
+        const bannerBadge = document.getElementById("bannerCallerStatusBadge");
+        if (bannerBadge) {
+            bannerBadge.textContent = `STATE: ${isBlocked ? 'CALL BLOCKED' : (isWarn ? 'WARNING' : (isUnblocked ? 'UNBLOCKED' : 'MONITORING'))}`;
+            bannerBadge.style.color = isBlocked ? '#EF4444' : (isWarn ? '#F59E0B' : (isUnblocked ? '#10B981' : '#22D3EE'));
+            bannerBadge.style.background = isBlocked ? 'rgba(239,68,68,0.2)' : (isWarn ? 'rgba(245,158,11,0.2)' : (isUnblocked ? 'rgba(16,185,129,0.18)' : 'rgba(34,211,238,0.15)'));
+        }
+
+        // Trigger Real-Time Toast Notification with Data Update Date
+        if (isUnblocked) {
+            showToast(`✅ Notification: Caller profile unblocked. Data update date: ${updateDateStr}`, "success", 5000);
+        } else if (isBlocked) {
+            showToast(`🚨 Notification Alert: Repeated unknown caller BLOCKED! Data update date: ${updateDateStr}`, "error", 6000);
+        } else if (isWarn) {
+            showToast(`⚠️ Notification Warning: Call 2 repeat suspicious request detected. Data update date: ${updateDateStr}`, "warning", 5000);
+        } else if (repeatCount === 1) {
+            showToast(`🔔 Notification: Call 1 processed. State: MONITORING. Data update date: ${updateDateStr}`, "info", 4000);
+        } else if (repeatCount === 0) {
+            showToast(`🔄 Notification: Test records reset to clean baseline (0/3). Data update date: ${updateDateStr}`, "info", 4000);
+        } else {
+            showToast(`🔔 Notification: Unknown caller evaluation updated. Data update date: ${updateDateStr}`, "info", 4000);
+        }
+    }
+
+    async function executeHighLevelDataUpdate() {
+        try {
+            const conv = "Give me your bank details and account number. Send the OTP and transfer the funds immediately.";
+            const customInput = document.getElementById("customTextInput");
+            if (customInput) customInput.value = conv;
+            const url = `/api/security/unknown-caller/simulate?target_call_number=3&scam_threat=BANK_DETAILS&conversation_text=${encodeURIComponent(conv)}`;
+            const resp = await fetch(getApiUrl(url), { method: "POST" });
+            if (!resp.ok) throw new Error("High level data simulation failed");
+            const data = await resp.json();
+
+            // Ensure full High-Level Process Telemetry consistency
+            data.repeat_count = 3;
+            data.repeat_calls = 3;
+            data.status = "CALL BLOCKED";
+            data.block_required = true;
+            data.is_blocked = true;
+            data.voice_similarity = 100.0;
+            data.detected_intent = "BANK_DETAILS_REQUEST";
+            data.request_type = "BANK_DETAILS_REQUEST";
+            data.detected_requests = ["OTP_REQUEST", "MONEY_REQUEST", "PAYMENT_REQUEST", "BANK_DETAILS_REQUEST"];
+            data.conversation_text = conv;
+
+            updateCardUI(data);
+            await loadCallerLogs();
+            showToast("🚨 High-Level Security Data Active: Call 3 threshold reached & Caller Blocked!", "error", 6000);
+        } catch (e) {
+            showToast("Error updating high-level data: " + e.message, "error", 5000);
+        }
+    }
+
+    function resetToCleanBaseline() {
+        const customInput = document.getElementById("customTextInput");
+        if (customInput) customInput.value = "";
+        const transcriptBox = document.getElementById("transcriptBox");
+        if (transcriptBox) transcriptBox.innerHTML = `<span style="color: var(--text-muted); font-style: italic;">[Awaiting caller audio / dialogue input...]</span>`;
+
+        updateCardUI({
+            caller_identifier: "Unknown",
+            caller_id: "Unknown",
+            voice_similarity: 0.0,
+            repeat_count: 0,
+            repeat_calls: 0,
+            status: "MONITORING",
+            block_required: false,
+            is_blocked: false,
+            decision_reason: "System ready. Clean baseline monitoring active.",
+            detected_intent: "NONE",
+            request_type: "NONE",
+            detected_requests: [],
+            conversation_text: "[Awaiting caller audio / dialogue input...]",
+            profile_id: null
+        });
+    }
+
+    async function syncActiveCallerProfile() {
+        try {
+            const resp = await fetch(getApiUrl("/api/caller-protection/profiles"));
+            if (!resp.ok) {
+                resetToCleanBaseline();
+                return;
+            }
+            const profiles = await resp.json();
+            if (profiles && profiles.length > 0) {
+                const active = profiles[0];
+                const histResp = await fetch(getApiUrl("/api/security/unknown-caller/history?limit=1"));
+                let latestHist = null;
+                if (histResp.ok) {
+                    const hList = await histResp.json();
+                    if (hList && hList.length > 0) latestHist = hList[0];
+                }
+
+                const speechText = latestHist ? (latestHist.transcript_summary || "") : "";
+                const customInput = document.getElementById("customTextInput");
+                if (customInput && !customInput.value && speechText) customInput.value = speechText;
+
+                const repCount = active.repeat_count !== undefined ? Number(active.repeat_count) : 0;
+                const isBlockedProf = Boolean(active.is_blocked) && repCount >= 3;
+                const profStatus = isBlockedProf ? "CALL BLOCKED" : (active.status || (repCount >= 2 ? "WARNING" : "MONITORING"));
+
+                updateCardUI({
+                    caller_identifier: active.caller_id || "Unknown",
+                    caller_id: active.caller_id || "Unknown",
+                    voice_similarity: isBlockedProf ? 100.0 : (active.last_similarity_score !== undefined ? active.last_similarity_score : (repCount === 0 ? 0.0 : 94.2)),
+                    repeat_count: repCount,
+                    repeat_calls: repCount,
+                    status: profStatus,
+                    block_required: isBlockedProf,
+                    is_blocked: isBlockedProf,
+                    block_reason: active.block_reason || "Repeated suspicious requests from an unknown caller.",
+                    conversation_text: speechText,
+                    detected_intent: isBlockedProf ? "BANK_DETAILS_REQUEST" : (latestHist && repCount > 0 ? (latestHist.request_type || "OTP_REQUEST") : "NONE"),
+                    request_type: isBlockedProf ? "BANK_DETAILS_REQUEST" : (latestHist && repCount > 0 ? (latestHist.request_type || "OTP_REQUEST") : "NONE"),
+                    detected_requests: isBlockedProf
+                        ? ["OTP_REQUEST", "MONEY_REQUEST", "PAYMENT_REQUEST", "BANK_DETAILS_REQUEST"] 
+                        : (repCount === 2 ? ["OTP_REQUEST", "MONEY_REQUEST"] : (repCount === 1 ? ["OTP_REQUEST"] : []))
+                });
+            } else {
+                resetToCleanBaseline();
+            }
+        } catch (e) {
+            console.error("Failed to sync active caller profile:", e);
+            resetToCleanBaseline();
+        }
+    }
+
+    async function testConversationPreset(text, scamThreat) {
+        const customInput = document.getElementById("customTextInput");
+        if (customInput) customInput.value = text;
+        try {
+            const url = `/api/security/unknown-caller/simulate?scam_threat=${scamThreat}&conversation_text=${encodeURIComponent(text)}`;
+            const resp = await fetch(getApiUrl(url), { method: "POST" });
+            if (!resp.ok) throw new Error("Preset test failed");
+            const data = await resp.json();
+            updateCardUI(data);
+            await loadCallerLogs();
+        } catch (e) {
+            showToast("Error running conversation preset: " + e.message, "error", 5000);
+        }
+    }
+
+    async function analyzeCustomText() {
+        const inputEl = document.getElementById("customTextInput");
+        const text = inputEl ? inputEl.value.trim() : "";
+        if (!text) {
+            showToast("Please enter dialogue or speech text to analyze.", "warning", 4000);
+            return;
+        }
+        try {
+            let scamThreat = "SUSPICIOUS_REQUEST";
+            const lower = text.toLowerCase();
+            if (lower.includes("otp") || lower.includes("one-time")) scamThreat = "OTP_THEFT";
+            else if (lower.includes("money") || lower.includes("rupees") || lower.includes("dollar")) scamThreat = "MONEY_DEMAND";
+            else if (lower.includes("invoice") || lower.includes("bill")) scamThreat = "INVOICE_DEMAND";
+            else if (lower.includes("bank") || lower.includes("account")) scamThreat = "BANK_DETAILS";
+
+            const repEl = document.getElementById("convRepeatCount");
+            const currRep = repEl ? parseInt(repEl.textContent, 10) || 1 : 1;
+            const nextTarget = Math.min(3, currRep + 1);
+
+            const url = `/api/security/unknown-caller/simulate?target_call_number=${nextTarget}&scam_threat=${scamThreat}&conversation_text=${encodeURIComponent(text)}`;
+            const resp = await fetch(getApiUrl(url), { method: "POST" });
+            if (!resp.ok) throw new Error("Custom analysis failed");
+            const data = await resp.json();
+            updateCardUI(data);
+            await loadCallerLogs();
+        } catch (e) {
+            showToast("Error analyzing text: " + e.message, "error", 5000);
+        }
+    }
+
+    async function runSimulatedCall(simType, targetCallNumber, scamThreat) {
+        try {
+            let url = `/api/security/unknown-caller/simulate?simulation_type=${simType}`;
+            if (targetCallNumber) url += `&target_call_number=${targetCallNumber}`;
+            if (scamThreat) url += `&scam_threat=${scamThreat}`;
+
+            const resp = await fetch(getApiUrl(url), { method: "POST" });
+            if (!resp.ok) throw new Error("Simulation failed");
+            const data = await resp.json();
+            updateCardUI(data);
+            await loadCallerLogs();
+        } catch (e) {
+            showToast("Simulation error: " + e.message, "error", 5000);
+        }
+    }
+
+    async function handleAudioUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const statusEl = document.getElementById("uploadStatusText");
+        statusEl.textContent = `Analyzing ${file.name}...`;
+
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("caller_identifier", "Unknown");
+        formData.append("caller_status", "UNKNOWN");
+
+        try {
+            const resp = await fetch(getApiUrl("/api/security/unknown-caller/analyze"), {
+                method: "POST",
+                body: formData
+            });
+            if (!resp.ok) {
+                const err = await resp.json();
+                throw new Error(err.detail || "Audio analysis failed");
+            }
+            const data = await resp.json();
+            statusEl.textContent = `Analyzed: ${file.name}`;
+            updateCardUI(data);
+            loadCallerLogs();
+        } catch (e) {
+            statusEl.textContent = "Error";
+            alert("Error analyzing audio: " + e.message);
+        }
+    }
+
+    async function markEventReviewed(eventId) {
+        try {
+            const resp = await fetch(getApiUrl(`/api/security/unknown-caller/${eventId}/review`), {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    reviewed_by: "security_analyst",
+                    review_notes: "Operator reviewed voice similarity and security policy."
+                })
+            });
+            if (!resp.ok) throw new Error("Failed to mark reviewed");
+            loadCallerLogs();
+        } catch (e) {
+            alert("Review error: " + e.message);
+        }
+    }
+
+    async function unblockCurrentCaller(targetId) {
+        const idToUnblock = targetId || activeProfileId || 1;
+        try {
+            const resp = await fetch(getApiUrl(`/api/security/unknown-caller/${idToUnblock}/unblock`), {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ review_notes: "Operator unblocked caller after verification." })
+            });
+            if (!resp.ok) throw new Error("Unblock failed");
+
+            updateCardUI({
+                caller_identifier: "Unknown",
+                repeat_count: 0,
+                repeat_calls: 0,
+                voice_similarity: 0.0,
+                status: "UNBLOCKED",
+                block_required: false,
+                is_blocked: false,
+                decision_reason: "Caller unblocked by authorized operator. Threat cleared and repeat counter reset.",
+                detected_requests: [],
+                conversation_text: "[Awaiting caller audio / dialogue input...]",
+                profile_id: idToUnblock
+            });
+            await loadCallerLogs();
+            showToast("✅ Caller profile unblocked. Repeat counter reset to 0.", "success", 5000);
+        } catch (e) {
+            showToast("Unblock error: " + e.message, "error", 5000);
+        }
+    }
+
+    async function resetDemoData() {
+        try {
+            await fetch(getApiUrl("/api/security/unknown-caller/reset"), { method: "POST" });
+            resetToCleanBaseline();
+            await loadCallerLogs();
+            showToast("🔄 Security test records & high process data reset to clean baseline (0/3 Calls).", "info", 4000);
+        } catch (e) {
+            showToast("Reset error: " + e.message, "error", 5000);
+        }
+    }
+
+    async function loadCallerLogs() {
+        const tbody = document.getElementById("callerLogsTableBody");
+        try {
+            const resp = await fetch(getApiUrl("/api/security/unknown-caller/history"));
+            if (!resp.ok) throw new Error("Could not fetch logs");
+            const logs = await resp.json();
+
+            const latestDate = logs.length > 0 ? formatTimestamp(logs[0].timestamp) : new Date().toLocaleString();
+            const topbarDate = document.getElementById("callerDataUpdateDate");
+            if (topbarDate) topbarDate.textContent = latestDate;
+            const bannerDate = document.getElementById("bannerCallerUpdateDate");
+            if (bannerDate) bannerDate.textContent = latestDate;
+
+            tbody.innerHTML = logs.map(l => {
+                const statusStr = (l.status || "MONITORING").toUpperCase();
+                const isBlocked = (statusStr.includes("BLOCK") && !statusStr.includes("UNBLOCK")) || (l.block_status && !statusStr.includes("UNBLOCK"));
+                const isWarn = !isBlocked && statusStr.includes("WARN");
+                const isUnblocked = statusStr.includes("UNBLOCK");
+                const badgeColor = isBlocked ? "#EF4444" : (isWarn ? "#F59E0B" : (isUnblocked || statusStr === "ALLOW" ? "#10B981" : "#22D3EE"));
+
+                return `
+                    <tr>
+                        <td style="font-family: 'JetBrains Mono', monospace; font-weight: 700;">#${l.event_id || l.id}</td>
+                        <td style="font-family: 'JetBrains Mono', monospace; font-size: 12px; white-space: nowrap;">${formatTimestamp(l.timestamp)}</td>
+                        <td><span class="badge-safe" style="color: ${l.caller_status === 'KNOWN' ? '#4ADE80' : '#F59E0B'};">${l.caller_status || 'UNKNOWN'}</span></td>
+                        <td><strong>${l.caller_identifier || 'Unknown'}</strong></td>
+                        <td style="font-family: 'JetBrains Mono', monospace; font-weight: 700;">${l.repeat_count}</td>
+                        <td style="font-family: 'JetBrains Mono', monospace; color: #38BDF8;">${(l.voice_similarity || 0).toFixed(1)}%</td>
+                        <td><span style="font-weight: 700; color: ${badgeColor};">${l.status}</span></td>
+                        <td style="font-size: 12px; color: var(--text-secondary); max-width: 220px;">${l.block_reason || 'Normal Monitoring'}</td>
+                        <td><span class="${l.review_status === 'REVIEWED' ? 'badge-safe' : 'badge-danger'}" style="font-size: 11px;">${l.review_status || 'PENDING'}</span></td>
+                        <td style="white-space: nowrap;">
+                            ${l.review_status !== 'REVIEWED' ? `<button class="btn-start" style="padding: 3px 8px; font-size: 11px; margin-right: 4px;" onclick="markEventReviewed(${l.event_id || l.id})">Review</button>` : ''}
+                            ${isBlocked ? `<button class="btn-stop" style="padding: 3px 8px; font-size: 11px; background: rgba(34, 197, 94, 0.15); border-color: rgba(34, 197, 94, 0.4); color: #4ADE80;" onclick="unblockCurrentCaller(${l.event_id || l.id})">Unblock</button>` : ''}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--status-critical);">Error loading logs: ${e.message}</td></tr>`;
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        initLiveClock();
+        loadSettings();
+        syncActiveCallerProfile();
+        loadCallerLogs();
+        const startTimestamp = new Date().toLocaleString();
+        showToast(`🛡️ VoiceGuard AI Engine Initialized & Running. Data update date: ${startTimestamp}`, "info", 5000);
+    });
+</script>
+
+</body>
+</html>

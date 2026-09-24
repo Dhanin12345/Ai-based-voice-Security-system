@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceGuard AI — Human vs Synthetic Voice Analytics</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .comparison-table-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            color: var(--text-main);
+        }
+        .comparison-table th {
+            background: rgba(13, 25, 40, 0.9);
+            color: var(--primary);
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.8px;
+            padding: 12px 16px;
+            border-bottom: 2px solid var(--border-color);
+            text-align: left;
+        }
+        .comparison-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(29, 51, 75, 0.5);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .comparison-table tr:hover {
+            background: rgba(34, 211, 238, 0.04);
+        }
+        .val-human {
+            color: var(--status-safe);
+            font-weight: 600;
+        }
+        .val-robot {
+            color: var(--status-very-high);
+            font-weight: 600;
+        }
+        .val-diff {
+            color: var(--secondary);
+            font-weight: 500;
+        }
+        .tag-insight {
+            font-size: 11px;
+            font-family: var(--font-family);
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+
+<div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <a class="brand" href="index.html">
+            <div class="brand-icon">🛡</div>
+            <div>
+                <h4>VoiceGuard AI</h4>
+                <span>AI Security Center</span>
+            </div>
+        </a>
+
+        <nav>
+            <a href="index.html"><span>▣</span><span>Dashboard</span></a>
+            <a href="dashboard.html"><span>🎙</span><span>Live Monitor</span></a>
+            <a href="audio.html"><span>🔊</span><span>Audio Analysis</span></a>
+            <a class="active" href="analytics.html"><span>◈</span><span>Analytics</span></a>
+            <a href="alerts.html"><span>⚠</span><span>Alerts</span></a>
+            <a href="history.html"><span>◷</span><span>History</span></a>
+            <a href="report.html"><span>📄</span><span>Reports</span></a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <a href="settings.html"><span>⚙</span><span>Settings</span></a>
+            <div class="sidebar-system-badge">
+                <span class="status-dot"></span>
+                SYSTEM ONLINE
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+        <header class="topbar">
+            <div>
+                <h2>VOICE ANALYTICS - Human Voice vs Robot/Synthetic Voice Data Analysis</h2>
+                <p>Dataset acoustic feature statistics, real signal comparison matrix, and machine learning feature distribution metrics</p>
+            </div>
+            
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <button id="btnClearData" class="btn-stop" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: var(--status-very-high); font-size: 13px;" onclick="clearAllData()">
+                    🗑 RESET HISTORY
+                </button>
+                <div class="system-status">
+                    <span class="status-dot"></span>
+                    ML Engine: ● ONLINE
+                </div>
+            </div>
+        </header>
+
+        <!-- TOP STATS -->
+        <div class="stats-grid" style="margin-bottom: 25px;">
+            <div class="stat-card">
+                <span class="stat-title">DATASET SAMPLES</span>
+                <strong id="cardTotalSamples" style="color: var(--primary);">0</strong>
+                <small>Total training & test files</small>
+            </div>
+            <div class="stat-card">
+                <span class="stat-title">HUMAN VOICE SAMPLES</span>
+                <strong id="cardHumanSamples" style="color: var(--status-safe);">0</strong>
+                <small id="cardHumanPct">0.0% of dataset</small>
+            </div>
+            <div class="stat-card">
+                <span class="stat-title">ROBOT / SYNTHETIC VOICE</span>
+                <strong id="cardSyntheticSamples" style="color: var(--status-very-high);">0</strong>
+                <small id="cardSyntheticPct">0.0% of dataset</small>
+            </div>
+            <div class="stat-card">
+                <span class="stat-title">EXTRACTED FEATURES</span>
+                <strong id="cardFeatureCount" style="color: var(--secondary);">46</strong>
+                <small>Signal attributes / sample</small>
+            </div>
+        </div>
+
+        <!-- HUMAN VS ROBOT FEATURE COMPARISON TABLE -->
+        <section class="comparison-table-card">
+            <div class="card-title" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h4 style="margin: 0; font-size: 18px; font-weight: 700;">Human Voice vs Robot/Synthetic Voice Feature Matrix</h4>
+                    <span style="font-size: 12px; color: var(--text-secondary);">Direct acoustic feature comparison calculated from dataset/features.csv</span>
+                </div>
+                <span class="badge-safe">REAL SIGNAL ANALYSIS</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Acoustic Feature</th>
+                            <th>Human Voice (Dataset Avg)</th>
+                            <th>Robot / Synthetic Voice (Dataset Avg)</th>
+                            <th>Difference / Delta</th>
+                            <th>Acoustic Significance</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comparisonTableBody">
+                        <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Loading comparison matrix...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- CHARTS GRID -->
+        <section class="analysis-grid" style="margin-bottom: 24px;">
+            <!-- DOUGHNUT CHART -->
+            <div class="chart-card">
+                <div class="card-title">
+                    <h4>1. Class Distribution (Human vs Robot/Synthetic)</h4>
+                    <span>DATASET PROPORTIONS</span>
+                </div>
+                <div style="height: 250px; position: relative;">
+                    <canvas id="doughnutChart"></canvas>
+                </div>
+            </div>
+
+            <!-- ACOUSTIC RADAR CHART -->
+            <div class="chart-card">
+                <div class="card-title">
+                    <h4>2. Acoustic Profile Comparison</h4>
+                    <span>NORMALIZED FEATURES</span>
+                </div>
+                <div style="height: 250px; position: relative;">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- FEATURE DIFFERENCE BAR CHART -->
+        <section class="chart-card" style="margin-bottom: 24px;">
+            <div class="card-title">
+                <h4>3. Acoustic Feature Statistics Comparison</h4>
+                <span>PITCH, SPECTRAL & ENERGY METRICS</span>
+            </div>
+            <div style="height: 260px; position: relative;">
+                <canvas id="groupedBarChart"></canvas>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    let doughnutChart = null;
+    let radarChart = null;
+    let groupedBarChart = null;
+
+    function getApiUrl() {
+        return (window.location.protocol === "file:" || !window.location.hostname) ? "http://localhost:8000" : "";
+    }
+
+    async function loadAnalyticsData() {
+        try {
+            const resp = await fetch(`${getApiUrl()}/api/analytics/comparison`);
+            if (!resp.ok) throw new Error("Failed to fetch analytics comparison");
+            const data = await resp.json();
+
+            const ov = data.overview || {};
+            const comp = data.comparison || {};
+            const human = data.human || {};
+            const synth = data.synthetic || {};
+
+            // Render Overview Stat Cards
+            document.getElementById("cardTotalSamples").textContent = ov.total_samples || 0;
+            document.getElementById("cardHumanSamples").textContent = ov.human_samples || 0;
+            document.getElementById("cardHumanPct").textContent = `${ov.human_percentage || 0}% of dataset`;
+            document.getElementById("cardSyntheticSamples").textContent = ov.synthetic_samples || 0;
+            document.getElementById("cardSyntheticPct").textContent = `${ov.synthetic_percentage || 0}% of dataset`;
+
+            // Build Feature Matrix Table Rows
+            const featureDefs = [
+                {
+                    key: "pitch_mean",
+                    label: "Pitch Mean (F0 Hz)",
+                    unit: " Hz",
+                    humanVal: human.average_pitch_hz || 0,
+                    synthVal: synth.average_pitch_hz || 0,
+                    insight: "Human pitch reflects natural vocal tract resonance; synthetic voices show flat or unnatural baseline pitch."
+                },
+                {
+                    key: "pitch_std",
+                    label: "Pitch Variation (Std Dev Hz)",
+                    unit: " Hz",
+                    humanVal: human.pitch_variation_hz || 0,
+                    synthVal: synth.pitch_variation_hz || 0,
+                    insight: "Natural human speech exhibits continuous pitch modulation; synthetic speech displays rigid/flat pitch contours."
+                },
+                {
+                    key: "rms_energy",
+                    label: "RMS Energy (Volume / Amplitude)",
+                    unit: "",
+                    humanVal: human.average_energy || 0,
+                    synthVal: synth.average_energy || 0,
+                    insight: "Human breath dynamics cause energy fluctuations; robot TTS engine output exhibits uniform normalized volume."
+                },
+                {
+                    key: "zcr",
+                    label: "Zero Crossing Rate (ZCR)",
+                    unit: "",
+                    humanVal: human.average_zcr || 0,
+                    synthVal: synth.average_zcr || 0,
+                    insight: "Fricative consonants and breath noise increase human ZCR compared to smooth synthesized vocal waveforms."
+                },
+                {
+                    key: "spectral_centroid",
+                    label: "Spectral Centroid (Brightness)",
+                    unit: " Hz",
+                    humanVal: human.average_spectral_centroid_hz || 0,
+                    synthVal: synth.average_spectral_centroid_hz || 0,
+                    insight: "Measures audio brightness (center of mass of spectrum). Synthetic voices often show metallic high-frequency noise."
+                },
+                {
+                    key: "spectral_bandwidth",
+                    label: "Spectral Bandwidth (Spread)",
+                    unit: " Hz",
+                    humanVal: human.average_spectral_bandwidth_hz || 0,
+                    synthVal: synth.average_spectral_bandwidth_hz || 0,
+                    insight: "Human vocal tract formants create rich spectral spread across vocal frequency bands."
+                },
+                {
+                    key: "spectral_rolloff",
+                    label: "Spectral Rolloff (85% Cutoff)",
+                    unit: " Hz",
+                    humanVal: human.average_spectral_rolloff_hz || 0,
+                    synthVal: synth.average_spectral_rolloff_hz || 0,
+                    insight: "High spectral rolloff indicates energy distribution into upper harmonics."
+                },
+                {
+                    key: "mfcc_mean",
+                    label: "MFCC Overall Mean",
+                    unit: "",
+                    humanVal: human.mfcc_overall_mean || 0,
+                    synthVal: synth.mfcc_overall_mean || 0,
+                    insight: "Timbral acoustic profile derived from Mel-frequency cepstral coefficients."
+                },
+                {
+                    key: "duration",
+                    label: "Average Duration",
+                    unit: " sec",
+                    humanVal: human.average_duration_sec || 0,
+                    synthVal: synth.average_duration_sec || 0,
+                    insight: "Sample duration across benchmark dataset files."
+                }
+            ];
+
+            const tbody = document.getElementById("comparisonTableBody");
+            tbody.innerHTML = "";
+
+            featureDefs.forEach(item => {
+                const formatVal = (val, key) => {
+                    const num = Number(val) || 0;
+                    if (key === "rms_energy") return num.toFixed(4);
+                    if (key === "zcr") return num.toFixed(4);
+                    return num.toFixed(2);
+                };
+
+                const hVal = formatVal(item.humanVal, item.key);
+                const sVal = formatVal(item.synthVal, item.key);
+                const rawDelta = Number(item.humanVal) - Number(item.synthVal);
+                const deltaVal = formatVal(rawDelta, item.key);
+                const deltaNum = Number(deltaVal);
+                const deltaStr = (deltaNum >= 0 ? `+${deltaVal}` : `${deltaVal}`) + item.unit;
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td style="font-weight: 600; color: var(--text-main); font-family: var(--font-family);">${item.label}</td>
+                    <td class="val-human">${hVal}${item.unit}</td>
+                    <td class="val-robot">${sVal}${item.unit}</td>
+                    <td class="val-diff">${deltaStr}</td>
+                    <td class="tag-insight">${item.insight}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // 1. Doughnut Chart
+            if (doughnutChart) doughnutChart.destroy();
+            doughnutChart = new Chart(document.getElementById("doughnutChart").getContext("2d"), {
+                type: "doughnut",
+                data: {
+                    labels: [`Human Voice (${ov.human_percentage || 0}%)`, `Robot/Synthetic (${ov.synthetic_percentage || 0}%)`],
+                    datasets: [{
+                        data: [ov.human_samples || 0, ov.synthetic_samples || 0],
+                        backgroundColor: ["#22C55E", "#EF4444"],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: "#F8FAFC" } } }
+                }
+            });
+
+            // 2. Radar Chart - Acoustic Profile Comparison (Normalized values)
+            if (radarChart) radarChart.destroy();
+            radarChart = new Chart(document.getElementById("radarChart").getContext("2d"), {
+                type: "radar",
+                data: {
+                    labels: ["Pitch Variation", "RMS Energy x10k", "ZCR x100", "Centroid /100", "Bandwidth /100", "Rolloff /100"],
+                    datasets: [
+                        {
+                            label: "Human Voice",
+                            data: [
+                                (human.pitch_variation_hz || 0).toFixed(1),
+                                (human.average_energy * 10000 || 0).toFixed(1),
+                                (human.average_zcr * 100 || 0).toFixed(1),
+                                (human.average_spectral_centroid_hz / 100 || 0).toFixed(1),
+                                (human.average_spectral_bandwidth_hz / 100 || 0).toFixed(1),
+                                (human.average_spectral_rolloff_hz / 100 || 0).toFixed(1)
+                            ],
+                            borderColor: "#22C55E",
+                            backgroundColor: "rgba(34, 197, 94, 0.2)",
+                            pointBackgroundColor: "#22C55E"
+                        },
+                        {
+                            label: "Robot / Synthetic Voice",
+                            data: [
+                                (synth.pitch_variation_hz || 0).toFixed(1),
+                                (synth.average_energy * 10000 || 0).toFixed(1),
+                                (synth.average_zcr * 100 || 0).toFixed(1),
+                                (synth.average_spectral_centroid_hz / 100 || 0).toFixed(1),
+                                (synth.average_spectral_bandwidth_hz / 100 || 0).toFixed(1),
+                                (synth.average_spectral_rolloff_hz / 100 || 0).toFixed(1)
+                            ],
+                            borderColor: "#EF4444",
+                            backgroundColor: "rgba(239, 68, 68, 0.2)",
+                            pointBackgroundColor: "#EF4444"
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: "rgba(255,255,255,0.1)" },
+                            grid: { color: "rgba(255,255,255,0.1)" },
+                            pointLabels: { color: "#A8B6C8", font: { size: 11 } },
+                            ticks: { display: false }
+                        }
+                    },
+                    plugins: { legend: { labels: { color: "#F8FAFC" } } }
+                }
+            });
+
+            // 3. Grouped Bar Chart
+            if (groupedBarChart) groupedBarChart.destroy();
+            groupedBarChart = new Chart(document.getElementById("groupedBarChart").getContext("2d"), {
+                type: "bar",
+                data: {
+                    labels: ["Pitch Mean (Hz)", "Pitch Variation (Hz)", "Spectral Centroid (/10)", "Spectral Bandwidth (/10)", "Spectral Rolloff (/10)"],
+                    datasets: [
+                        {
+                            label: "Human Voice (Dataset Avg)",
+                            data: [
+                                (human.average_pitch_hz || 0).toFixed(1),
+                                (human.pitch_variation_hz || 0).toFixed(1),
+                                (human.average_spectral_centroid_hz / 10 || 0).toFixed(1),
+                                (human.average_spectral_bandwidth_hz / 10 || 0).toFixed(1),
+                                (human.average_spectral_rolloff_hz / 10 || 0).toFixed(1)
+                            ],
+                            backgroundColor: "#22C55E"
+                        },
+                        {
+                            label: "Robot / Synthetic Voice (Dataset Avg)",
+                            data: [
+                                (synth.average_pitch_hz || 0).toFixed(1),
+                                (synth.pitch_variation_hz || 0).toFixed(1),
+                                (synth.average_spectral_centroid_hz / 10 || 0).toFixed(1),
+                                (synth.average_spectral_bandwidth_hz / 10 || 0).toFixed(1),
+                                (synth.average_spectral_rolloff_hz / 10 || 0).toFixed(1)
+                            ],
+                            backgroundColor: "#EF4444"
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { color: "#A8B6C8" }, grid: { color: "rgba(255,255,255,0.05)" } },
+                        y: { ticks: { color: "#A8B6C8" }, grid: { color: "rgba(255,255,255,0.05)" } }
+                    },
+                    plugins: { legend: { labels: { color: "#F8FAFC" } } }
+                }
+            });
+
+        } catch (e) {
+            console.error("Error loading analytics comparison:", e);
+        }
+    }
+
+    async function clearAllData() {
+        if (!confirm("Are you sure you want to clear all detection history and reset security analytics?")) return;
+        try {
+            const resp = await fetch(`${getApiUrl()}/api/history`, { method: "DELETE" });
+            if (!resp.ok) throw new Error("Failed to clear history");
+            alert("Security analysis history cleared successfully.");
+            loadAnalyticsData();
+        } catch (e) {
+            alert("Error clearing data: " + e.message);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        loadAnalyticsData();
+        setInterval(loadAnalyticsData, 3000);
+    });
+</script>
+
+</body>
+</html>

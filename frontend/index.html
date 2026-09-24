@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceGuard AI Security Center</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <a class="brand" href="index.html">
+            <div class="brand-icon">🛡</div>
+            <div>
+                <h4>VoiceGuard AI</h4>
+                <span>AI Security Center</span>
+            </div>
+        </a>
+
+        <nav>
+            <a class="active" href="index.html">
+                <span>▣</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="dashboard.html">
+                <span>🎙</span>
+                <span>Live Monitor</span>
+            </a>
+            <a href="audio.html">
+                <span>🔊</span>
+                <span>Audio Analysis</span>
+            </a>
+            <a href="analytics.html">
+                <span>◈</span>
+                <span>Analytics</span>
+            </a>
+            <a href="alerts.html">
+                <span>⚠</span>
+                <span>Alerts</span>
+            </a>
+            <a href="history.html">
+                <span>◷</span>
+                <span>History</span>
+            </a>
+            <a href="report.html">
+                <span>📄</span>
+                <span>Reports</span>
+            </a>
+            <a href="caller_protection.html">
+                <span>📞</span>
+                <span>Caller Protection</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <a href="settings.html">
+                <span>⚙</span>
+                <span>Settings</span>
+            </a>
+            <div class="sidebar-system-badge">
+                <span class="status-dot"></span>
+                SYSTEM ONLINE
+            </div>
+        </div>
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+
+        <!-- TOP HEADER -->
+        <header class="topbar">
+            <div>
+                <h2>AI Voice Security Center</h2>
+                <p>Real-Time Voice Cloning Detection &amp; Threat Analysis</p>
+            </div>
+
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <span id="modelStatusBadge" class="badge-safe" style="color: var(--primary); background: rgba(34, 211, 238, 0.1); border-color: rgba(34, 211, 238, 0.3);">
+                    DEVELOPMENT MODE - HEURISTIC ACOUSTIC CLASSIFIER
+                </span>
+
+                <div class="system-status" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                    <span class="status-dot"></span>
+                    <span id="systemLiveClock">System Online</span>
+                </div>
+            </div>
+        </header>
+
+
+        <!-- DASHBOARD TOP SUMMARY CARDS -->
+        <section class="stats-grid" style="margin-bottom: 24px;">
+            <div class="stat-card">
+                <span class="stat-title">TOTAL ANALYSES</span>
+                <strong id="cardTotalAnalyses" style="color: var(--primary);">0</strong>
+                <small>Live DB record count</small>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-title">SUSPICIOUS DETECTIONS</span>
+                <strong id="cardSuspicious" style="color: var(--status-high);">0</strong>
+                <small>Synthetic speech hits</small>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-title">ACTIVE ALERTS</span>
+                <strong id="cardAlerts" style="color: var(--status-very-high);">0</strong>
+                <small>Requires verification</small>
+            </div>
+
+            <div class="stat-card risk-card">
+                <span class="stat-title">AVERAGE RISK</span>
+                <strong id="cardAvgRisk" style="color: var(--text-main);">0 / 100</strong>
+                <small>System risk baseline</small>
+            </div>
+        </section>
+
+
+        <!-- LIVE VOICE MONITOR CARD -->
+        <section class="monitor-card" style="margin-bottom: 24px;">
+            <div class="monitor-header">
+                <div>
+                    <span class="small-label">STAGE-BASED PROCESSING WORKFLOW</span>
+                    <h3>LIVE VOICE MONITOR</h3>
+                </div>
+                <span id="monitorStatus" class="badge-safe">READY</span>
+            </div>
+
+            <!-- 4-STAGE PIPELINE: PROCESS THE DATA EACH BY EACH -->
+            <div class="pipeline-flow" style="margin-top: 20px;">
+                <div class="pipeline-stage active" id="pipeStage1">
+                    <div class="stage-icon-box">🎙️</div>
+                    <div class="stage-content">
+                        <div class="stage-title">STAGE 1: CAPTURE</div>
+                        <div class="stage-desc" id="pipeStage1Text">Standby for Voice Input</div>
+                    </div>
+                </div>
+                <div class="pipeline-stage" id="pipeStage2">
+                    <div class="stage-icon-box">📊</div>
+                    <div class="stage-content">
+                        <div class="stage-title">STAGE 2: FEATURES</div>
+                        <div class="stage-desc" id="pipeStage2Text">Acoustic Signal Extraction</div>
+                    </div>
+                </div>
+                <div class="pipeline-stage" id="pipeStage3">
+                    <div class="stage-icon-box">🤖</div>
+                    <div class="stage-content">
+                        <div class="stage-title">STAGE 3: AI MODEL</div>
+                        <div class="stage-desc" id="pipeStage3Text">Anti-Spoofing Classifier</div>
+                    </div>
+                </div>
+                <div class="pipeline-stage" id="pipeStage4">
+                    <div class="stage-icon-box">🛡️</div>
+                    <div class="stage-content">
+                        <div class="stage-title">STAGE 4: DEFENSE</div>
+                        <div class="stage-desc" id="pipeStage4Text">Risk Mitigation Action</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MICROPHONE AREA -->
+            <div class="microphone-area">
+                <div id="micCircle" class="mic-circle">
+                    🎙
+                </div>
+                <h3 id="micText">Microphone Ready</h3>
+                <p id="micSubtext">Start live monitoring or upload a recorded audio file</p>
+            </div>
+
+            <!-- WAVEFORM ANIMATION -->
+            <div class="waveform">
+                <div></div><div></div><div></div><div></div><div></div>
+                <div></div><div></div><div></div><div></div><div></div>
+                <div></div><div></div><div></div><div></div><div></div>
+            </div>
+
+            <!-- CONTROLS -->
+            <div class="control-buttons">
+                <button id="startBtn" class="btn-start" onclick="startMonitoring()">
+                    ▶ Start Live Monitoring
+                </button>
+
+                <button id="stopBtn" class="btn-stop" onclick="stopMonitoring()" disabled>
+                    ■ Stop
+                </button>
+
+                <button id="resetBtn" class="btn-stop" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: var(--text-secondary);" onclick="resetMonitorData()">
+                    ↺ Reset
+                </button>
+
+                <label class="btn-upload">
+                    ↑ Upload Audio File
+                    <input type="file" id="audioFile" accept=".wav,.mp3,.m4a,.ogg,.flac,.mp4,.mpeg,.mpg,.aac,.opus,.webm" hidden onchange="uploadAudio(this)">
+                </label>
+            </div>
+
+            <!-- AUDIO PLAYBACK PLAYER (LISTEN TO VERIFY) -->
+            <div id="audioPlaybackContainer" class="audio-player-card" style="display: none;">
+                <div class="player-header">
+                    <div class="player-title">
+                        <span>🎧</span>
+                        <span id="audioPlayerStatus">AUDIO PLAYBACK — LISTEN TO VOICE SAMPLE</span>
+                    </div>
+                    <span class="badge-safe" id="audioPlayerBadge" style="font-size: 10px; padding: 2px 8px;">SAMPLE ACTIVE</span>
+                </div>
+                <audio id="audioPlayback" controls></audio>
+            </div>
+        </section>
+
+        <!-- PRIMARY LIVE SECURITY VERDICT BANNER (ELIMINATES NUMBER NOISE) -->
+        <section class="security-verdict-banner" id="securityVerdictBanner">
+            <div class="verdict-main">
+                <div class="verdict-shield" id="verdictShield">🛡️</div>
+                <div class="verdict-info">
+                    <span class="small-label" id="verdictSublabel">VOICE BIOMETRIC SECURITY VERDICT</span>
+                    <h3 id="verdictHeadline">STANDBY — READY FOR AUDIO STREAM</h3>
+                    <p id="verdictDetail">Speak into microphone or upload an audio file to evaluate synthetic voice risk.</p>
+                </div>
+            </div>
+
+            <div class="verdict-metrics-strip">
+                <!-- Split Authenticity Meter -->
+                <div class="split-authenticity-meter">
+                    <div class="split-meter-labels">
+                        <span style="color: var(--status-safe);" id="verdictHumanLabel">HUMAN: 0%</span>
+                        <span style="color: var(--status-very-high);" id="verdictSynthLabel">SYNTHETIC: 0%</span>
+                    </div>
+                    <div class="split-meter-bar">
+                        <div class="split-meter-human" id="verdictHumanBar" style="width: 50%;"></div>
+                        <div class="split-meter-synth" id="verdictSynthBar" style="width: 50%;"></div>
+                    </div>
+                </div>
+
+                <!-- Threat Level Badge -->
+                <div>
+                    <span class="small-label" style="display: block; margin-bottom: 2px;">THREAT STATUS</span>
+                    <span id="threatStatusBadge" class="badge-safe">● SAFE / STANDBY</span>
+                </div>
+
+                <!-- Risk Score Badge -->
+                <div>
+                    <span class="small-label" style="display: block; margin-bottom: 2px;">RISK SCORE</span>
+                    <strong id="riskScore" style="font-size: 20px; font-family: 'JetBrains Mono', monospace; color: var(--text-main); display: block;">0 / 100</strong>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEPARATE DUAL VOICE ANALYSIS GRID (AUTHENTIC vs SYNTHETIC SPEECH PROFILES) -->
+        <section class="analysis-grid" style="margin-bottom: 24px; grid-template-columns: 1fr 1fr;">
+            <!-- HUMAN VOICE ANALYSIS CARD -->
+            <div class="chart-card" style="border-top: 3px solid var(--status-safe);">
+                <div class="card-title">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: var(--status-safe); font-size: 16px;">●</span>
+                        <h4>AUTHENTIC HUMAN VOICE</h4>
+                    </div>
+                    <span id="humanClassBadge" class="badge-safe">GENUINE CLASS</span>
+                </div>
+
+                <div style="margin: 12px 0; padding: 10px 14px; background: rgba(34, 197, 94, 0.06); border-radius: 8px; border: 1px solid rgba(34, 197, 94, 0.2); display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 12px; color: var(--text-secondary);">Authenticity Confidence</span>
+                    <strong id="humanConfidence" style="font-family: 'JetBrains Mono', monospace; color: var(--status-safe); font-size: 18px;">0%</strong>
+                </div>
+
+                <div id="humanEvidenceList" style="font-size: 13px; display: flex; flex-direction: column; gap: 9px; color: var(--text-secondary);">
+                    <div style="color: var(--status-safe); display: flex; align-items: center; gap: 8px;"><span>✓</span> Natural pitch variation &amp; continuous F0 contour</div>
+                    <div style="color: var(--status-safe); display: flex; align-items: center; gap: 8px;"><span>✓</span> Dynamic vocal tract formant modulation</div>
+                    <div style="color: var(--status-safe); display: flex; align-items: center; gap: 8px;"><span>✓</span> Authentic conversational speech rhythm &amp; pauses</div>
+                </div>
+            </div>
+
+            <!-- ROBOT / SYNTHETIC VOICE ANALYSIS CARD -->
+            <div class="chart-card" style="border-top: 3px solid var(--status-very-high);">
+                <div class="card-title">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: var(--status-very-high); font-size: 16px;">●</span>
+                        <h4>AI SYNTHETIC &amp; CLONE DETECTOR</h4>
+                    </div>
+                    <span id="syntheticClassBadge" class="badge-danger">SYNTHETIC DETECTOR</span>
+                </div>
+
+                <div style="margin: 12px 0; padding: 10px 14px; background: rgba(239, 68, 68, 0.06); border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2); display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 12px; color: var(--text-secondary);">Vocoder Impersonation Index</span>
+                    <strong id="synthConfidence" style="font-family: 'JetBrains Mono', monospace; color: var(--status-very-high); font-size: 18px;">0%</strong>
+                </div>
+
+                <div id="syntheticEvidenceList" style="font-size: 13px; display: flex; flex-direction: column; gap: 9px; color: var(--text-secondary);">
+                    <div style="display: flex; align-items: center; gap: 8px;"><span>•</span> Neural vocoder phase &amp; pitch consistency analysis</div>
+                    <div style="display: flex; align-items: center; gap: 8px;"><span>•</span> Spectral flatness &amp; vocoder frequency band inspection</div>
+                    <div style="display: flex; align-items: center; gap: 8px;"><span>•</span> Machine learning synthetic speech pattern classification</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- HUMAN vs ROBOT/SYNTHETIC COMPARISON & RISK SCORE GRID (SECTION 8) -->
+        <section class="analysis-grid" style="margin-bottom: 24px;">
+            <!-- COMPARISON ANALYSIS PANEL -->
+            <div class="chart-card">
+                <div class="card-title">
+                    <h4>Voice Classification Probabilities</h4>
+                    <span id="classificationConfidence">CONFIDENCE: 0%</span>
+                </div>
+
+                <!-- PROBABILITY VISUALIZATION BARS -->
+                <div style="margin: 15px 0;">
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                        <span>Human Voice</span>
+                        <strong id="humanBarText" style="color: var(--status-safe);">0%</strong>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 12px;">
+                        <div id="humanProgressBar" style="background: var(--status-safe); width: 0%; height: 100%; transition: width 0.4s;"></div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                        <span>Robot / Synthetic Voice</span>
+                        <strong id="synthBarText" style="color: var(--status-very-high);">0%</strong>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); height: 10px; border-radius: 5px; overflow: hidden;">
+                        <div id="synthProgressBar" style="background: var(--status-very-high); width: 0%; height: 100%; transition: width 0.4s;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FINAL RISK SCORE & CLASSIFICATION RESULT PANEL -->
+            <div class="chart-card" style="text-align: center;">
+                <div class="card-title" style="text-align: left;">
+                    <h4>FINAL DETECTION RESULT</h4>
+                    <span>MODEL DECISION</span>
+                </div>
+
+                <div class="gauge-container">
+                    <canvas id="gaugeCanvas" class="gauge-canvas" width="180" height="95"></canvas>
+                    <div id="riskGaugeText" class="gauge-text" style="color: var(--status-safe);">0</div>
+                </div>
+
+                <h3 id="explainClassification" style="font-size: 20px; font-weight: 700; margin: 8px 0; color: var(--text-main);">Awaiting Audio...</h3>
+                <strong id="riskScore" style="display: block; font-size: 36px; color: var(--text-main); font-weight: 700; margin: 2px 0; font-family: 'JetBrains Mono', monospace;">0 / 100</strong>
+                <span id="riskLevel" class="badge-safe" style="display: inline-block; margin-top: 4px;">● LOW RISK</span>
+            </div>
+        </section>
+
+
+        <!-- REAL-TIME DETECTION TIMELINE CHART -->
+        <section class="chart-card" style="margin-bottom: 24px;">
+            <div class="card-title">
+                <h4>REAL-TIME DETECTION TIMELINE</h4>
+                <span>STAGE 9 - TEMPORAL WINDOWS</span>
+            </div>
+            <div style="height: 240px; position: relative;">
+                <canvas id="detectionChart"></canvas>
+            </div>
+        </section>
+
+
+        <!-- AI ANALYSIS EXPLANATION PANEL -->
+        <section class="alert-card">
+            <div style="display: flex; gap: 15px; align-items: flex-start;">
+                <span class="alert-icon">⚠</span>
+                <div style="flex: 1;">
+                    <h3 id="alertTitle">No Active Threat</h3>
+                    <p id="alertMessage" style="color: var(--text-secondary); margin-bottom: 12px;">
+                        No elevated synthetic-speech indication in the current voice analysis.
+                    </p>
+                    <p id="explainRecommendation" style="color: var(--text-muted); font-size: 13px; font-style: italic; margin-bottom: 15px;">
+                        Recommendation will be updated based on model predictions.
+                    </p>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn-verification" onclick="verifySpeaker()">🛡 VERIFICATION GUIDANCE</button>
+                        <button class="btn-start" style="width: auto; padding: 8px 16px;" onclick="window.location.href='report.html'">VIEW DETAILS</button>
+                        <button class="btn-stop" style="width: auto; padding: 8px 16px;" onclick="acknowledgeAlert()">ACKNOWLEDGE</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="js/app.js"></script>
+<script src="js/recorder.js"></script>
+
+</body>
+</html>

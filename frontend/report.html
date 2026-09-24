@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceGuard AI — Voice Security Analysis Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        @media print {
+            .sidebar, .topbar button, .no-print { display: none !important; }
+            .main { padding: 0 !important; margin: 0 !important; }
+            body { background: #fff !important; color: #000 !important; }
+            .monitor-card, .chart-card { border: 1px solid #ccc !important; background: #fff !important; color: #000 !important; box-shadow: none !important; }
+            .badge-safe, .badge-warning, .badge-danger { border: 1px solid #000 !important; color: #000 !important; }
+        }
+        .report-section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 20px 0 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .feature-table td, .feature-table th {
+            padding: 8px 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+        .feature-table tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body>
+
+<div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <a class="brand" href="index.html">
+            <div class="brand-icon">🛡</div>
+            <div>
+                <h4>VoiceGuard AI</h4>
+                <span>AI Security Center</span>
+            </div>
+        </a>
+
+        <nav>
+            <a href="index.html"><span>▣</span><span>Dashboard</span></a>
+            <a href="dashboard.html"><span>🎙</span><span>Live Monitor</span></a>
+            <a href="audio.html"><span>🔊</span><span>Audio Analysis</span></a>
+            <a href="analytics.html"><span>◈</span><span>Analytics</span></a>
+            <a href="alerts.html"><span>⚠</span><span>Alerts</span></a>
+            <a href="history.html"><span>◷</span><span>History</span></a>
+            <a class="active" href="report.html"><span>📄</span><span>Reports</span></a>
+            <a href="caller_protection.html"><span>📞</span><span>Caller Protection</span></a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <a href="settings.html"><span>⚙</span><span>Settings</span></a>
+            <div class="sidebar-system-badge">
+                <span class="status-dot"></span>
+                SYSTEM ONLINE
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+        <header class="topbar">
+            <div>
+                <h2>Voice Security Analysis &amp; Impersonation Audit Report</h2>
+                <p>Official forensic evaluation document with calculated acoustic features &amp; risk assessment</p>
+            </div>
+            
+            <div class="no-print" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <div class="system-status" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                    <span class="status-dot"></span>
+                    <span id="topbarLiveClock">● CURRENT TIME: System Online</span>
+                </div>
+                <div class="system-status" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; display: flex; align-items: center; gap: 6px; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); padding: 5px 12px; border-radius: 8px;">
+                    <span style="color: #94A3B8;">📅 Data Updated:</span>
+                    <strong id="reportDataUpdateDate" style="color: #38BDF8;">--</strong>
+                </div>
+                <button class="btn-start" style="font-size: 12px; padding: 6px 14px; background: rgba(56, 189, 248, 0.15); border: 1px solid #38BDF8; color: #38BDF8; font-weight: 700; cursor: pointer;" onclick="loadReport(true)" title="Fetch and update the latest forensic report data">🔄 Update Data</button>
+                <button class="btn-start" onclick="window.print()">🖨 Print</button>
+                <button class="btn-upload" onclick="downloadReportCSV()">📥 Export CSV</button>
+                <button class="btn-upload" style="background: rgba(129, 140, 248, 0.15); border-color: rgba(129, 140, 248, 0.4); color: #818CF8;" onclick="downloadReportJSON()">📥 Export JSON</button>
+            </div>
+        </header>
+
+        <!-- DATA UPDATE & FORENSIC STATUS NOTIFICATION BANNER -->
+        <div id="reportDataNotificationBanner" style="display: flex; align-items: center; justify-content: space-between; background: rgba(34, 211, 238, 0.08); border: 1px solid rgba(34, 211, 238, 0.25); border-left: 5px solid #22D3EE; border-radius: 8px; padding: 12px 18px; margin-bottom: 20px; font-size: 13px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 18px;">🔔</span>
+                <div>
+                    <strong style="color: #FFFFFF; letter-spacing: 0.3px;">FORENSIC REPORT STATUS &amp; DATA UPDATE:</strong>
+                    <span style="color: var(--text-secondary); margin-left: 6px;">Report Session Timestamp:</span>
+                    <strong id="bannerReportTimestamp" style="color: #38BDF8; font-family: 'JetBrains Mono', monospace; margin-left: 4px;">--</strong>
+                    <span style="color: rgba(255,255,255,0.2); margin: 0 8px;">|</span>
+                    <span style="color: var(--text-secondary);">Current System Time:</span>
+                    <strong id="bannerCurrentTime" style="color: #A78BFA; font-family: 'JetBrains Mono', monospace; margin-left: 4px;">--</strong>
+                    <span style="color: rgba(255,255,255,0.2); margin: 0 8px;">|</span>
+                    <span style="color: var(--text-secondary);">Latest Data Update Date:</span>
+                    <strong id="bannerDataUpdateDate" style="color: #4ADE80; font-family: 'JetBrains Mono', monospace; margin-left: 4px;">--</strong>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <span id="bannerReportTypeBadge" style="font-size: 11px; font-weight: 700; color: #38BDF8; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.35); padding: 3px 8px; border-radius: 4px;">RECORDED SESSION</span>
+                <button onclick="loadReport(true)" style="background: rgba(34, 211, 238, 0.15); border: 1px solid #22D3EE; color: #22D3EE; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s;">🔄 Sync Data</button>
+            </div>
+        </div>
+
+        <!-- EMPTY STATE MESSAGE (HIDDEN BY DEFAULT) -->
+        <div id="emptyReportState" style="display: none; padding: 40px; text-align: center; background: var(--bg-card); border-radius: 12px; border: 1px dashed var(--border-color); margin-bottom: 24px;">
+            <div style="font-size: 36px; margin-bottom: 12px;">🛡️</div>
+            <h3 style="color: var(--text-main); margin-bottom: 8px;">No Voice Analysis Report Found</h3>
+            <p style="color: var(--text-secondary); max-width: 500px; margin: 0 auto 20px auto;">
+                There are currently no recorded voice analysis sessions. Record voice via microphone or run a 1-click demo to generate forensic reports.
+            </p>
+            <a href="dashboard.html" class="btn-start" style="display: inline-block; text-decoration: none;">▶ Open Live Monitor</a>
+        </div>
+
+        <!-- MAIN REPORT CARD -->
+        <section class="monitor-card" id="reportContentCard" style="margin-bottom: 20px;">
+            <!-- REPORT HEADER -->
+            <div class="monitor-header">
+                <div>
+                    <span class="small-label" id="reportIdLabel">REPORT ID: LOADING...</span>
+                    <h3 style="margin-top: 4px;" id="reportTitle">Voice Impersonation Audit &amp; Risk Classification</h3>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <span id="reportImpersonationBadge" class="badge-safe">SAFE</span>
+                    <span id="reportRiskBadge" class="badge-safe">LOW RISK</span>
+                </div>
+            </div>
+
+            <hr style="border-color: var(--border-color); margin: 20px 0;">
+
+            <!-- INPUT METADATA SUMMARY -->
+            <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 24px;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+                        <span class="small-label">SESSION DATE &amp; TIME</span>
+                        <span id="reportStatusBadge" style="font-size: 10px; font-weight: 700; color: #38BDF8; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.35); padding: 1px 6px; border-radius: 4px;">● RECORDED SESSION</span>
+                    </div>
+                    <p style="font-weight: 700; margin: 4px 0; font-family: 'JetBrains Mono', monospace; font-size: 15px; color: #FFFFFF;" id="reportDate">---</p>
+                    <p id="reportRecordedDate" style="margin: 0; font-size: 11px; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace;">Data Updated: <span id="reportCardDataUpdateDate" style="color: #94A3B8;">--</span></p>
+                </div>
+                <div>
+                    <span class="small-label">AUDIO SOURCE / FILE</span>
+                    <p style="font-weight: 600; margin: 4px 0; color: var(--primary);" id="reportSource">---</p>
+                </div>
+                <div>
+                    <span class="small-label">DURATION &amp; SR</span>
+                    <p style="font-weight: 600; margin: 4px 0; font-family: 'JetBrains Mono', monospace;" id="reportFormat">---</p>
+                </div>
+                <div>
+                    <span class="small-label">MODEL CONFIDENCE</span>
+                    <p style="font-weight: 700; margin: 4px 0; font-size: 18px; color: var(--text-main); font-family: 'JetBrains Mono', monospace;" id="repConfidence">0%</p>
+                </div>
+            </div>
+
+            <!-- SECTION 1: CLASSIFICATION SUMMARY -->
+            <h4 class="report-section-title">1. Voice Classification &amp; Probabilistic Scores</h4>
+            <div class="table-responsive">
+                <table style="width: 100%; font-size: 13px; border-collapse: collapse; margin-bottom: 24px;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border-color); text-align: left; color: var(--primary);">
+                            <th style="padding: 10px;">Classification Metric</th>
+                            <th style="padding: 10px;">Calculated Value</th>
+                            <th style="padding: 10px;">Forensic Interpretation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 10px; font-weight: 600;">Overall Voice Classification</td>
+                            <td style="padding: 10px;"><strong id="repClassification" style="font-size: 14px;">---</strong></td>
+                            <td style="padding: 10px; color: var(--text-secondary);" id="repClassificationNote">---</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 10px; font-weight: 600;">Robot / Synthetic Voice Probability</td>
+                            <td style="padding: 10px;"><strong id="repSynthProb" style="color: var(--status-very-high); font-family: 'JetBrains Mono', monospace;">0%</strong></td>
+                            <td style="padding: 10px; color: var(--text-secondary);">Probability that audio originates from neural TTS, vocoder, or voice cloner</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 10px; font-weight: 600;">Human Voice Probability</td>
+                            <td style="padding: 10px;"><strong id="repHumanProb" style="color: var(--status-safe); font-family: 'JetBrains Mono', monospace;">0%</strong></td>
+                            <td style="padding: 10px; color: var(--text-secondary);">Probability of organic biological vocal tract inflection &amp; natural dynamics</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 10px; font-weight: 600;">Voice Clone Impersonation Probability</td>
+                            <td style="padding: 10px;"><strong id="repCloneProb" style="color: var(--secondary); font-family: 'JetBrains Mono', monospace;">0%</strong></td>
+                            <td style="padding: 10px; color: var(--text-secondary);">Derived impersonation attack risk index</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 10px; font-weight: 600;">Risk Score</td>
+                            <td style="padding: 10px;"><strong id="repRiskScore" style="font-family: 'JetBrains Mono', monospace;">0 / 100</strong></td>
+                            <td style="padding: 10px; color: var(--text-secondary);" id="repRiskScoreNote">---</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; font-weight: 600;">Temporal Windows Analyzed</td>
+                            <td style="padding: 10px;"><strong id="repSuspiciousWins" style="font-family: 'JetBrains Mono', monospace;">0 / 0 Windows</strong></td>
+                            <td style="padding: 10px; color: var(--text-secondary);">Suspicious vs Total analysis window count</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- SECTION 2: ACOUSTIC SIGNAL ATTRIBUTES -->
+            <h4 class="report-section-title">2. Calculated Acoustic Signal Attributes</h4>
+            <div class="table-responsive" style="margin-bottom: 24px;">
+                <table class="feature-table" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border-color); text-align: left; color: var(--primary);">
+                            <th>Feature</th>
+                            <th>Calculated Value</th>
+                            <th>Human Baseline</th>
+                            <th>Synthetic Indicator Threshold</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportFeaturesTableBody">
+                        <tr><td>Pitch Mean (F0)</td><td id="rfPitchMean" style="font-weight: 700; color: var(--primary);">0.0 Hz</td><td>85 – 255 Hz</td><td>Abnormal freeze or out-of-range F0</td></tr>
+                        <tr><td>Pitch Variation (Std Dev)</td><td id="rfPitchStd" style="font-weight: 700; color: var(--primary);">0.0 Hz</td><td>&gt; 25.0 Hz</td><td>&lt; 15.0 Hz (monotone / vocoder artifact)</td></tr>
+                        <tr><td>RMS Energy</td><td id="rfEnergy" style="font-weight: 700; color: var(--primary);">0.000000</td><td>Dynamic modulation</td><td>Flat artificial gain normalization</td></tr>
+                        <tr><td>Zero Crossing Rate (ZCR)</td><td id="rfZCR" style="font-weight: 700; color: var(--primary);">0.0000</td><td>0.040 – 0.080</td><td>High unvoiced fricative anomalies</td></tr>
+                        <tr><td>Spectral Centroid</td><td id="rfCentroid" style="font-weight: 700; color: var(--primary);">0.0 Hz</td><td>1,500 – 3,000 Hz</td><td>High-frequency metallic vocoder hiss</td></tr>
+                        <tr><td>Spectral Bandwidth</td><td id="rfBandwidth" style="font-weight: 700; color: var(--primary);">0.0 Hz</td><td>1,800 – 3,200 Hz</td><td>Truncated synthetic formant bandwidth</td></tr>
+                        <tr><td>Spectral Rolloff</td><td id="rfRolloff" style="font-weight: 700; color: var(--primary);">0.0 Hz</td><td>2,800 – 5,500 Hz</td><td>Abrupt anti-aliasing filter cutoff</td></tr>
+                        <tr><td>Harmonicity (HNR)</td><td id="rfHarmonicity" style="font-weight: 700; color: var(--primary);">0.0000</td><td>&gt; 0.60</td><td>&lt; 0.40 (elevated phase jitter)</td></tr>
+                        <tr><td>Speech Duration</td><td id="rfSpeechDuration" style="font-weight: 700; color: var(--primary);">0.00 sec</td><td>Variable</td><td>VAD active speech segment</td></tr>
+                        <tr><td>Silence Ratio</td><td id="rfSilenceRatio" style="font-weight: 700; color: var(--primary);">0.0%</td><td>10% – 30%</td><td>&lt; 5% (unnatural breathless TTS)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- SECTION 3: ACTIONABLE SECURITY RECOMMENDATION -->
+            <h4 class="report-section-title">3. Security Action &amp; Prevention Guidance</h4>
+            <div id="repActionBanner" style="background: rgba(34, 211, 238, 0.08); border: 1px solid rgba(34, 211, 238, 0.3); border-left: 4px solid var(--primary); border-radius: 10px; padding: 18px; margin-bottom: 25px;">
+                <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--primary); margin-bottom: 4px;" id="repActionHeader">
+                    MANDATED SECURITY PROTOCOL
+                </div>
+                <h5 id="repActionText" style="margin: 0 0 8px 0; font-size: 15px; font-weight: 700; color: #FFFFFF;">
+                    CONTINUE MONITORING
+                </h5>
+                <p id="repRecommendation" style="margin: 0; font-size: 13px; line-height: 1.6; color: var(--text-secondary);">
+                    Voice characteristics verified. No active impersonation attack detected.
+                </p>
+            </div>
+
+            <!-- SECTION 4: SYSTEM LIMITATIONS & DISCLAIMER -->
+            <h4 style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">
+                System Limitations &amp; Probabilistic Disclaimer
+            </h4>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 0; line-height: 1.6;">
+                Voice cloning detection is probabilistic and should not be treated as absolute forensic proof. Detection performance can vary across neural vocoders, VoIP/telephony codecs, acoustic background noise, and microphone channel variations. Out-of-band verification is strongly recommended for high-value operations.
+            </p>
+        </section>
+    </main>
+</div>
+
+<script>
+    let currentReportId = null;
+    let currentReportData = null;
+
+    function getApiUrl(path) {
+        if (window.location.protocol === "file:" || !window.location.hostname) {
+            return "http://localhost:8000" + path;
+        }
+        return path;
+    }
+
+    async function loadReport(isManual = false) {
+        if (isManual) {
+            showToast("🔄 Updating forensic report data from engine...", "info", 2000);
+        }
+        const urlParams = new URLSearchParams(window.location.search);
+        const recordId = urlParams.get('id');
+
+        const fetchUrl = recordId ? getApiUrl(`/api/reports/${recordId}`) : getApiUrl(`/api/reports/latest`);
+
+        try {
+            const resp = await fetch(fetchUrl);
+            if (!resp.ok) {
+                showEmptyReport();
+                if (isManual) showToast("⚠️ No report found or engine busy.", "warning", 3000);
+                return;
+            }
+
+            const data = await resp.json();
+            if (!data || !data.report_id) {
+                showEmptyReport();
+                if (isManual) showToast("⚠️ Report payload empty.", "warning", 3000);
+                return;
+            }
+
+            currentReportId = data.detection_id;
+            currentReportData = data;
+            renderReport(data, isManual);
+        } catch (e) {
+            console.error("Could not load report:", e);
+            showEmptyReport();
+            if (isManual) showToast("🚨 Error updating report: " + e.message, "error", 4000);
+        }
+    }
+
+    function showEmptyReport() {
+        const emptyEl = document.getElementById("emptyReportState");
+        const contentEl = document.getElementById("reportContentCard");
+        if (emptyEl) emptyEl.style.display = "block";
+        if (contentEl) contentEl.style.display = "none";
+    }
+
+    function renderReport(data, isManualSync = false) {
+        const emptyEl = document.getElementById("emptyReportState");
+        const contentEl = document.getElementById("reportContentCard");
+        if (emptyEl) emptyEl.style.display = "none";
+        if (contentEl) contentEl.style.display = "block";
+
+        document.getElementById("reportIdLabel").textContent = `REPORT ID: #${data.report_id}`;
+        
+        // Parse and format authentic recorded/session timestamp (Not live clock!)
+        let sessionDate = null;
+        if (data.timestamp) {
+            if (typeof data.timestamp === "string" && !data.timestamp.endsWith("Z") && !data.timestamp.includes("+")) {
+                sessionDate = new Date(data.timestamp + "Z");
+            } else {
+                sessionDate = new Date(data.timestamp);
+            }
+        }
+        const formattedSessionDate = (sessionDate && !isNaN(sessionDate.getTime())) 
+            ? sessionDate.toLocaleString() 
+            : (data.timestamp || "N/A");
+
+        // Primary Session Date & Time display (Actual historical analysis timestamp)
+        const repDateEl = document.getElementById("reportDate");
+        if (repDateEl) {
+            repDateEl.textContent = formattedSessionDate;
+        }
+
+        // Live vs Recorded Data Badge
+        const isLiveStream = (data.source === "live_stream" || data.source === "microphone" || data.is_live);
+        const statusBadge = document.getElementById("reportStatusBadge");
+        if (statusBadge) {
+            if (isLiveStream) {
+                statusBadge.textContent = "● LIVE STREAM";
+                statusBadge.style.color = "#22C55E";
+                statusBadge.style.background = "rgba(34, 197, 94, 0.15)";
+                statusBadge.style.borderColor = "rgba(34, 197, 94, 0.3)";
+            } else {
+                statusBadge.textContent = "● RECORDED SESSION";
+                statusBadge.style.color = "#38BDF8";
+                statusBadge.style.background = "rgba(56, 189, 248, 0.15)";
+                statusBadge.style.borderColor = "rgba(56, 189, 248, 0.35)";
+            }
+        }
+        const bannerBadge = document.getElementById("bannerReportTypeBadge");
+        if (bannerBadge) {
+            bannerBadge.textContent = isLiveStream ? "LIVE STREAM BUFFER" : "RECORDED FORENSIC SESSION";
+        }
+
+        // Data Update Timestamps
+        const updateNow = new Date().toLocaleString();
+        const topbarUpdateEl = document.getElementById("reportDataUpdateDate");
+        if (topbarUpdateEl) topbarUpdateEl.textContent = updateNow;
+        const bannerUpdateEl = document.getElementById("bannerDataUpdateDate");
+        if (bannerUpdateEl) bannerUpdateEl.textContent = updateNow;
+        const bannerTsEl = document.getElementById("bannerReportTimestamp");
+        if (bannerTsEl) bannerTsEl.textContent = formattedSessionDate;
+        const cardUpdateEl = document.getElementById("reportCardDataUpdateDate");
+        if (cardUpdateEl) cardUpdateEl.textContent = updateNow;
+
+        if (isManualSync) {
+            showToast(`✅ Notification: Report data updated (#${data.report_id}). Data update date: ${updateNow}`, "success", 4000);
+        }
+
+        document.getElementById("reportSource").textContent = data.filename || data.source || "Audio Stream";
+
+        const dur = (data.duration_seconds || 0).toFixed(1);
+        const sr = (data.sample_rate || 16000).toLocaleString();
+        document.getElementById("reportFormat").textContent = `${dur}s @ ${sr} Hz (Mono)`;
+
+        // Badges
+        const elRiskBadge = document.getElementById("reportRiskBadge");
+        const elImpBadge = document.getElementById("reportImpersonationBadge");
+        const risk = data.risk_score || 0;
+        const synth = Math.round((data.synthetic_probability || 0) * 100);
+        const rawHuman = (data.human_probability !== undefined) ? data.human_probability : (data.confidence || 0);
+        const humanProbPercent = rawHuman <= 1.0 ? rawHuman * 100 : rawHuman;
+        const human = (humanProbPercent % 1 !== 0) ? +(humanProbPercent).toFixed(2) : Math.round(humanProbPercent);
+        const clone = Math.round((data.clone_probability || 0) * 100);
+        const conf = Math.round((data.confidence || 0) * 100);
+
+        // Exact 65% threshold: >= 65% is HUMAN VOICE (LOW RISK), < 65% is ROBOTIC VOICE / AI VOICE (HIGH RISK)
+        const isHuman = humanProbPercent >= 65.0;
+
+        if (elRiskBadge) {
+            elRiskBadge.textContent = isHuman ? "LOW RISK" : "HIGH RISK";
+            elRiskBadge.className = isHuman ? "badge-safe" : "badge-danger";
+        }
+
+        if (elImpBadge) {
+            elImpBadge.textContent = isHuman ? "SAFE" : "HIGH-RISK IMPERSONATION";
+            elImpBadge.className = isHuman ? "badge-safe" : "badge-danger";
+        }
+
+        // Section 1
+        const elClass = document.getElementById("repClassification");
+        if (elClass) {
+            elClass.textContent = isHuman ? "HUMAN VOICE" : "ROBOTIC VOICE / AI VOICE";
+            elClass.style.color = isHuman ? "var(--status-safe)" : "var(--status-very-high)";
+        }
+        document.getElementById("repClassificationNote").textContent = isHuman
+            ? "Authentic human vocal tract formant dynamics verified (>=65% human confidence)."
+            : "Voice failed the 65% human-confidence threshold: Neural vocoder artifacts / unnatural acoustic indicators detected.";
+        document.getElementById("repSynthProb").textContent = `${synth}%`;
+        document.getElementById("repHumanProb").textContent = `${human}%`;
+        document.getElementById("repCloneProb").textContent = `${clone}%`;
+        document.getElementById("repConfidence").textContent = `${conf}%`;
+        document.getElementById("repRiskScore").textContent = `${risk} / 100`;
+        document.getElementById("repRiskScoreNote").textContent = risk >= 80 ? "CRITICAL RISK LEVEL" : risk >= 60 ? "HIGH RISK LEVEL" : risk >= 30 ? "MODERATE RISK" : "LOW RISK LEVEL";
+        document.getElementById("repSuspiciousWins").textContent = `${data.suspicious_windows || 0} / ${data.total_windows || 1} Windows`;
+
+        // Section 2: Acoustic features
+        const af = data.acoustic_features || {};
+        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        setVal("rfPitchMean", (af.pitch_mean_hz || 0).toFixed(1) + " Hz");
+        setVal("rfPitchStd", (af.pitch_variation_hz || 0).toFixed(1) + " Hz");
+        setVal("rfEnergy", (af.rms_energy || 0).toFixed(6));
+        setVal("rfZCR", (af.zero_crossing_rate || 0).toFixed(4));
+        setVal("rfCentroid", (af.spectral_centroid_hz || 0).toFixed(1) + " Hz");
+        setVal("rfBandwidth", (af.spectral_bandwidth_hz || 0).toFixed(1) + " Hz");
+        setVal("rfRolloff", (af.spectral_rolloff_hz || 0).toFixed(1) + " Hz");
+        setVal("rfHarmonicity", (af.harmonicity || 0.5).toFixed(4));
+        setVal("rfSpeechDuration", (af.speech_duration_sec || dur).toFixed(2) + " sec");
+        setVal("rfSilenceRatio", (af.silence_ratio_pct || 0).toFixed(1) + "%");
+
+        // Section 3: Recommendations
+        const banner = document.getElementById("repActionBanner");
+        const actionText = document.getElementById("repActionText");
+        const recText = document.getElementById("repRecommendation");
+
+        if (actionText) actionText.textContent = data.prevention_action || "CONTINUE MONITORING";
+        if (recText) recText.textContent = data.recommendation || "Standard monitoring protocol active.";
+
+        if (banner) {
+            if (risk >= 80) {
+                banner.style.borderColor = "#EF4444";
+                banner.style.background = "rgba(239, 68, 68, 0.12)";
+            } else if (risk >= 60) {
+                banner.style.borderColor = "#F97316";
+                banner.style.background = "rgba(249, 115, 22, 0.12)";
+            } else if (risk >= 30) {
+                banner.style.borderColor = "#F59E0B";
+                banner.style.background = "rgba(245, 158, 11, 0.12)";
+            } else {
+                banner.style.borderColor = "#22C55E";
+                banner.style.background = "rgba(34, 197, 94, 0.08)";
+            }
+        }
+    }
+
+    function downloadReportCSV() {
+        if (!currentReportId) {
+            alert("No report data available to download.");
+            return;
+        }
+        window.open(getApiUrl(`/api/reports/${currentReportId}?format=csv`), "_blank");
+    }
+
+    function downloadReportJSON() {
+        if (!currentReportId) {
+            alert("No report data available to download.");
+            return;
+        }
+        window.open(getApiUrl(`/api/reports/${currentReportId}?format=json`), "_blank");
+    }
+
+    // Dedicated System Live Clock (ticking current time, clearly separated from report data)
+    function initSystemClock() {
+        function tick() {
+            const now = new Date();
+            const currentFormatted = now.toLocaleString();
+            const topbarClockEl = document.getElementById("topbarLiveClock");
+            if (topbarClockEl) {
+                topbarClockEl.textContent = `● CURRENT TIME: ${currentFormatted}`;
+            }
+            const bannerClockEl = document.getElementById("bannerCurrentTime");
+            if (bannerClockEl) {
+                bannerClockEl.textContent = currentFormatted;
+            }
+        }
+        tick();
+        if (window.systemClockTimer) clearInterval(window.systemClockTimer);
+        window.systemClockTimer = setInterval(tick, 1000);
+    }
+
+    // Modern Floating Toast Notification
+    function showToast(message, type = "info", duration = 5000) {
+        let container = document.getElementById("toastContainerCustom");
+        if (!container) {
+            container = document.createElement("div");
+            container.id = "toastContainerCustom";
+            container.className = "toast-container-custom";
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement("div");
+        toast.className = `toast-custom toast-${type}`;
+        
+        let icon = "🔔";
+        if (type === "error" || type === "danger") icon = "🚨";
+        else if (type === "success") icon = "✅";
+        else if (type === "warning") icon = "⚠️";
+
+        toast.innerHTML = `<span style="font-size: 16px;">${icon}</span><span style="flex: 1;">${message}</span><span style="opacity: 0.6; font-size: 14px; margin-left: 8px; cursor: pointer;" title="Dismiss">✕</span>`;
+        toast.onclick = () => {
+            toast.style.opacity = "0";
+            toast.style.transform = "translateX(40px) scale(0.9)";
+            setTimeout(() => toast.remove(), 250);
+        };
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.style.opacity = "0";
+                toast.style.transform = "translateX(40px) scale(0.9)";
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, duration);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        initSystemClock();
+        loadReport();
+        const startTimestamp = new Date().toLocaleString();
+        const topbarUpdateEl = document.getElementById("reportDataUpdateDate");
+        if (topbarUpdateEl) topbarUpdateEl.textContent = startTimestamp;
+        const bannerUpdateEl = document.getElementById("bannerDataUpdateDate");
+        if (bannerUpdateEl) bannerUpdateEl.textContent = startTimestamp;
+        const cardUpdateEl = document.getElementById("reportCardDataUpdateDate");
+        if (cardUpdateEl) cardUpdateEl.textContent = startTimestamp;
+        showToast(`🛡️ VoiceGuard Forensic Report System Active. Data update date: ${startTimestamp}`, "info", 5000);
+    });
+</script>
+
+<div id="toastContainerCustom" class="toast-container-custom"></div>
+
+</body>
+</html>

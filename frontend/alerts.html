@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceGuard AI — Security Threat Alerts &amp; Incident Telemetry</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* ==========================================================================
+           ADVANCED CYBERSECURITY INCIDENT TELEMETRY UI STYLES
+           ========================================================================== */
+        
+        /* Floating Glassmorphic HUD Notification Bar */
+        .hud-notification-banner {
+            background: linear-gradient(135deg, rgba(12, 24, 44, 0.85) 0%, rgba(6, 12, 22, 0.95) 100%);
+            border: 1px solid rgba(0, 245, 255, 0.28);
+            border-left: 5px solid var(--primary);
+            border-radius: 14px;
+            padding: 16px 22px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 25px rgba(0, 245, 255, 0.12);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hud-notification-banner::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 245, 255, 0.08), transparent);
+            animation: radarSweep 6s infinite ease-in-out;
+            pointer-events: none;
+        }
+
+        @keyframes radarSweep {
+            0% { left: -100%; }
+            50% { left: 200%; }
+            100% { left: 200%; }
+        }
+
+        .radar-pulse-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #00F5FF;
+            box-shadow: 0 0 10px #00F5FF;
+            display: inline-block;
+            animation: radarPulse 1.8s infinite;
+        }
+
+        @keyframes radarPulse {
+            0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0, 245, 255, 0.7); }
+            70% { transform: scale(1.15); box-shadow: 0 0 0 10px rgba(0, 245, 255, 0); }
+            100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0, 245, 255, 0); }
+        }
+
+        /* KPI Metric Telemetry Cards */
+        .telemetry-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .telemetry-card {
+            background: linear-gradient(180deg, rgba(16, 28, 48, 0.65) 0%, rgba(9, 16, 28, 0.85) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 14px;
+            padding: 18px 20px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(12px);
+        }
+
+        .telemetry-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(0, 245, 255, 0.35);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 245, 255, 0.15);
+        }
+
+        .telemetry-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .telemetry-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .telemetry-icon {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .telemetry-val {
+            font-size: 28px;
+            font-weight: 800;
+            font-family: var(--font-mono);
+            letter-spacing: -0.5px;
+            color: #FFFFFF;
+            line-height: 1.1;
+            margin-bottom: 6px;
+        }
+
+        .telemetry-subtext {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Filter & Search Toolbar */
+        .incident-toolbar {
+            background: rgba(12, 21, 35, 0.85);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 7px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-tab:hover {
+            background: rgba(0, 245, 255, 0.1);
+            color: var(--text-main);
+            border-color: rgba(0, 245, 255, 0.3);
+        }
+
+        .filter-tab.active {
+            background: linear-gradient(135deg, rgba(0, 245, 255, 0.2) 0%, rgba(37, 99, 235, 0.25) 100%);
+            border-color: var(--primary);
+            color: var(--primary);
+            box-shadow: 0 0 15px rgba(0, 245, 255, 0.25);
+            font-weight: 700;
+        }
+
+        .search-box-wrapper {
+            position: relative;
+            min-width: 280px;
+        }
+
+        .search-input {
+            width: 100%;
+            background: rgba(6, 10, 18, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            padding: 8px 12px 8px 34px;
+            font-size: 13px;
+            color: #FFFFFF;
+            font-family: var(--font-family);
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 12px rgba(0, 245, 255, 0.3);
+            background: rgba(6, 10, 18, 0.95);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 13px;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        /* Enhanced Table Styling */
+        .incident-table-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(14px);
+        }
+
+        .incident-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 12.5px;
+            table-layout: fixed;
+        }
+
+        .incident-table thead th {
+            background: rgba(8, 14, 26, 0.95);
+            color: var(--primary);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            padding: 9px 10px;
+            border-bottom: 2px solid rgba(0, 245, 255, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+        }
+
+        .incident-table tbody tr {
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            height: 48px;
+        }
+
+        .incident-table tbody tr:hover {
+            background: rgba(0, 245, 255, 0.04);
+            box-shadow: inset 3px 0 0 var(--primary);
+        }
+
+        .incident-table td {
+            padding: 7px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            vertical-align: middle;
+        }
+
+        /* Small Data (Compact / Dense View) Styles */
+        .incident-table.small-data tbody tr {
+            height: 38px !important;
+        }
+
+        .incident-table.small-data td {
+            padding: 4px 8px !important;
+            font-size: 11.5px;
+        }
+
+        .incident-table.small-data .alert-id-badge {
+            font-size: 11px;
+            padding: 2px 6px;
+        }
+
+        .incident-table.small-data .threat-pill {
+            font-size: 9.5px;
+            padding: 2px 6px;
+        }
+
+        .incident-table.small-data .status-badge-active,
+        .incident-table.small-data .status-badge-resolved {
+            font-size: 9.5px;
+            padding: 2px 6px;
+        }
+
+        .col-incident-msg {
+            max-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .compact-message-box {
+            display: block;
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 11.5px;
+            cursor: pointer;
+            transition: color 0.15s ease;
+        }
+
+        .compact-message-box:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+        }
+
+        .alert-id-badge {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            color: var(--primary);
+            background: rgba(0, 245, 255, 0.1);
+            border: 1px solid rgba(0, 245, 255, 0.25);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            display: inline-block;
+        }
+
+        .timestamp-box {
+            font-family: var(--font-mono);
+            line-height: 1.3;
+        }
+
+        .timestamp-date {
+            font-size: 12px;
+            font-weight: 700;
+            color: #F8FAFC;
+        }
+
+        .timestamp-time {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Threat Pill Badges */
+        .threat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            letter-spacing: 0.3px;
+        }
+
+        .threat-pill.repeated-scam {
+            background: rgba(255, 23, 68, 0.14);
+            border: 1px solid rgba(255, 23, 68, 0.45);
+            color: #FFA4B2;
+        }
+
+        .threat-pill.synthetic-ai {
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.45);
+            color: #C4B5FD;
+        }
+
+        .threat-pill.warn-threat {
+            background: rgba(255, 179, 0, 0.15);
+            border: 1px solid rgba(255, 179, 0, 0.45);
+            color: #FDE68A;
+        }
+
+        /* Risk Score Mini Bar */
+        .risk-mini-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-mono);
+            font-weight: 700;
+        }
+
+        .risk-bar-track {
+            width: 55px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .risk-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        /* Incident Status Badges */
+        .status-badge-active {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255, 23, 68, 0.18);
+            border: 1px solid rgba(255, 23, 68, 0.6);
+            color: #FF5252;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge-resolved {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(0, 230, 118, 0.15);
+            border: 1px solid rgba(0, 230, 118, 0.5);
+            color: #00E676;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        /* Action Buttons */
+        .action-btn-group {
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .btn-action-report {
+            background: rgba(0, 245, 255, 0.12);
+            border: 1px solid rgba(0, 245, 255, 0.4);
+            color: var(--primary);
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-action-report:hover {
+            background: rgba(0, 245, 255, 0.25);
+            box-shadow: 0 0 14px rgba(0, 245, 255, 0.4);
+            color: #FFFFFF;
+            transform: translateY(-1px);
+        }
+
+        .btn-action-ack {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-secondary);
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-action-ack:hover {
+            background: rgba(0, 230, 118, 0.18);
+            border-color: rgba(0, 230, 118, 0.5);
+            color: var(--status-safe);
+            transform: translateY(-1px);
+        }
+
+        /* Pagination & Footer Controls */
+        .table-pagination-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .page-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            padding: 5px 11px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: rgba(0, 245, 255, 0.12);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .page-btn.active {
+            background: var(--primary);
+            color: #050A12;
+            border-color: var(--primary);
+            font-weight: 800;
+            box-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Incident Quick View Modal */
+        .cyber-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .cyber-modal-overlay.active {
+            display: flex;
+            animation: fadeInModal 0.25s ease;
+        }
+
+        @keyframes fadeInModal {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .cyber-modal-content {
+            background: var(--bg-sidebar);
+            border: 1px solid rgba(0, 245, 255, 0.35);
+            border-radius: 16px;
+            max-width: 650px;
+            width: 100%;
+            padding: 28px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 245, 255, 0.2);
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <a class="brand" href="index.html">
+            <div class="brand-icon">🛡</div>
+            <div>
+                <h4>VoiceGuard AI</h4>
+                <span>AI Security Center</span>
+            </div>
+        </a>
+
+        <nav>
+            <a href="index.html"><span>▣</span><span>Dashboard</span></a>
+            <a href="dashboard.html"><span>🎙</span><span>Live Monitor</span></a>
+            <a href="audio.html"><span>🔊</span><span>Audio Analysis</span></a>
+            <a href="analytics.html"><span>◈</span><span>Analytics</span></a>
+            <a class="active" href="alerts.html"><span>⚠</span><span>Alerts</span></a>
+            <a href="history.html"><span>◷</span><span>History</span></a>
+            <a href="report.html"><span>📄</span><span>Reports</span></a>
+            <a href="caller_protection.html"><span>📞</span><span>Caller Protection</span></a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <a href="settings.html"><span>⚙</span><span>Settings</span></a>
+            <div class="sidebar-system-badge">
+                <span class="status-dot"></span>
+                SYSTEM ONLINE
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+        <!-- TOPBAR -->
+        <header class="topbar">
+            <div>
+                <h2>Security Threat Alerts &amp; Telemetry</h2>
+                <p>Real-time autonomous threat detection, repeated unknown caller intercept &amp; incident forensics</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="system-status" style="font-family: var(--font-mono); font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                    <span class="status-dot"></span>
+                    <span id="alertsLiveClock">● LIVE CLOCK</span>
+                </div>
+                <div class="system-status" style="font-family: var(--font-mono); font-size: 12px; display: flex; align-items: center; gap: 6px; background: rgba(0, 245, 255, 0.08); border: 1px solid rgba(0, 245, 255, 0.25); padding: 5px 12px; border-radius: 8px;">
+                    <span>📅 Data Updated:</span>
+                    <strong id="alertsDataUpdateDate" style="color: var(--primary);">--</strong>
+                </div>
+                <button class="btn-start" style="font-size: 12px; padding: 6px 14px;" onclick="loadAlerts(true)">🔄 Sync Telemetry</button>
+            </div>
+        </header>
+
+        <!-- FLOATING HUD NOTIFICATION BAR: DISPLAY OF DATA UPDATE DATE -->
+        <section class="hud-notification-banner" id="hudNotificationBanner">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(0, 245, 255, 0.12); border: 1px solid rgba(0, 245, 255, 0.35); display: grid; place-items: center; font-size: 18px;">
+                    🔔
+                </div>
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="radar-pulse-dot"></span>
+                        <strong style="color: #FFFFFF; font-size: 14px; letter-spacing: 0.4px;">SECURITY INCIDENT FEED &amp; TELEMETRY NOTIFICATIONS</strong>
+                        <span class="badge-safe" style="font-size: 10px; padding: 2px 8px;">4s AUTO-SYNC</span>
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 13px; margin-top: 3px;">
+                        Display of latest data update date: 
+                        <strong id="bannerDataUpdateDate" style="color: var(--primary); font-family: var(--font-mono); font-weight: 700; font-size: 13px;">--</strong>
+                        <span style="color: rgba(255,255,255,0.2); margin: 0 6px;">|</span>
+                        <span id="bannerThreatSummary">Monitoring active security channels</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <span id="bannerActiveCountBadge" class="status-badge-active">
+                    <span class="radar-pulse-dot" style="background: #FF1744; box-shadow: 0 0 10px #FF1744;"></span>
+                    <span id="bannerActiveCountText">50 ACTIVE ALERTS</span>
+                </span>
+                <button class="btn-stop" style="font-size: 11px; padding: 5px 12px;" onclick="acknowledgeAllAlerts()">✓ Acknowledge All</button>
+            </div>
+        </section>
+
+        <!-- 4-METRIC TELEMETRY KPI CARDS -->
+        <section class="telemetry-grid">
+            <div class="telemetry-card">
+                <div class="telemetry-header">
+                    <span class="telemetry-title">TOTAL INCIDENTS</span>
+                    <span class="telemetry-icon">🛡️</span>
+                </div>
+                <div class="telemetry-val" id="kpiTotalAlerts" style="color: var(--primary);">--</div>
+                <div class="telemetry-subtext">
+                    <span>Recorded across all security policies</span>
+                </div>
+            </div>
+
+            <div class="telemetry-card">
+                <div class="telemetry-header">
+                    <span class="telemetry-title">ACTIVE THREATS</span>
+                    <span class="telemetry-icon">🚨</span>
+                </div>
+                <div class="telemetry-val" id="kpiActiveAlerts" style="color: var(--status-very-high);">--</div>
+                <div class="telemetry-subtext">
+                    <span style="color: #FF5252;">● Require operator review / verification</span>
+                </div>
+            </div>
+
+            <div class="telemetry-card">
+                <div class="telemetry-header">
+                    <span class="telemetry-title">CRITICAL RISK (&gt;85%)</span>
+                    <span class="telemetry-icon">⚡</span>
+                </div>
+                <div class="telemetry-val" id="kpiCriticalAlerts" style="color: #FF6D00;">--</div>
+                <div class="telemetry-subtext">
+                    <span>Repeated caller blocks &amp; fraud attempts</span>
+                </div>
+            </div>
+
+            <div class="telemetry-card">
+                <div class="telemetry-header">
+                    <span class="telemetry-title">LATEST INCIDENT DATE</span>
+                    <span class="telemetry-icon">🕒</span>
+                </div>
+                <div class="telemetry-val" id="kpiLatestTimestamp" style="font-size: 16px; color: var(--secondary-light); padding-top: 6px;">--</div>
+                <div class="telemetry-subtext">
+                    <span>Last security trigger timestamp</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- FILTER & SEARCH TOOLBAR -->
+        <section class="incident-toolbar">
+            <div class="filter-tabs">
+                <button class="filter-tab active" data-filter="ALL" onclick="setIncidentFilter('ALL', this)">
+                    <span>▣ All Incidents</span> <span id="tabCountAll">(0)</span>
+                </button>
+                <button class="filter-tab" data-filter="REPEATED" onclick="setIncidentFilter('REPEATED', this)">
+                    <span>📞 Repeated Callers</span> <span id="tabCountRepeated">(0)</span>
+                </button>
+                <button class="filter-tab" data-filter="FRAUD" onclick="setIncidentFilter('FRAUD', this)">
+                    <span>💸 Fraud / OTP Scams</span> <span id="tabCountFraud">(0)</span>
+                </button>
+                <button class="filter-tab" data-filter="SYNTHETIC" onclick="setIncidentFilter('SYNTHETIC', this)">
+                    <span>🤖 Synthetic Voices</span> <span id="tabCountSynthetic">(0)</span>
+                </button>
+                <button class="filter-tab" data-filter="ACTIVE_ONLY" onclick="setIncidentFilter('ACTIVE_ONLY', this)">
+                    <span>🔴 Active Only</span> <span id="tabCountActive">(0)</span>
+                </button>
+                <button class="filter-tab" data-filter="RESOLVED" onclick="setIncidentFilter('RESOLVED', this)">
+                    <span>✓ Resolved</span> <span id="tabCountResolved">(0)</span>
+                </button>
+            </div>
+
+            <div class="search-box-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="incidentSearchInput" class="search-input" placeholder="Search by ID, caller, message, threat type..." oninput="handleSearchInput(event)">
+            </div>
+        </section>
+
+        <!-- SECURITY INCIDENT LOG TABLE CARD -->
+        <section class="incident-table-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <span class="small-label" style="color: var(--primary);">INCIDENT INTELLIGENCE FEED</span>
+                    <h3 style="margin-top: 4px; font-size: 20px;">Active Voice Security Alerts &amp; Telemetry Records</h3>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="display: flex; gap: 4px; background: rgba(0,0,0,0.35); padding: 3px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+                        <button id="btnSmallDataView" class="page-btn active" style="font-size: 11px; padding: 4px 10px;" onclick="setDensityMode(true)">▤ Small Data View</button>
+                        <button id="btnExpandedView" class="page-btn" style="font-size: 11px; padding: 4px 10px;" onclick="setDensityMode(false)">▦ Expanded</button>
+                    </div>
+                    <div style="font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+                        <span>Telemetry Sync: <strong id="tableDataUpdateDate" style="color: var(--text-main);">--</strong></span>
+                        <span class="radar-pulse-dot" style="width: 8px; height: 8px;"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="incident-table small-data" id="incidentMainTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 58px; text-align: center;">Alert ID</th>
+                            <th style="width: 130px; white-space: nowrap;">Timestamp</th>
+                            <th style="width: 160px; white-space: nowrap;">Classification</th>
+                            <th style="width: 140px; white-space: nowrap;">Threat Type</th>
+                            <th style="width: 105px; white-space: nowrap;">Risk / Conf</th>
+                            <th style="width: auto;">Incident Message</th>
+                            <th style="width: 82px; text-align: center; white-space: nowrap;">Status</th>
+                            <th style="width: 100px; text-align: right; white-space: nowrap;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alertsTableBody">
+                        <tr>
+                            <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 36px;">
+                                <div style="display: inline-flex; align-items: center; gap: 10px;">
+                                    <span class="radar-pulse-dot"></span>
+                                    <span>Connecting to VoiceGuard security telemetry database...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- PAGINATION & METRICS FOOTER -->
+            <div class="table-pagination-footer">
+                <div style="font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary);">
+                    Showing <span id="paginationRangeText" style="color: var(--text-main); font-weight: 700;">0–0</span> of <span id="paginationTotalText" style="color: var(--primary); font-weight: 700;">0</span> incidents
+                </div>
+
+                <div class="pagination-controls">
+                    <button class="page-btn" id="btnPrevPage" onclick="changePage(-1)">‹ Prev</button>
+                    <div id="pageNumberButtons" style="display: flex; gap: 4px;">
+                        <!-- Generated dynamically -->
+                    </div>
+                    <button class="page-btn" id="btnNextPage" onclick="changePage(1)">Next ›</button>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- INCIDENT DETAIL MODAL -->
+<div class="cyber-modal-overlay" id="incidentModalOverlay" onclick="closeIncidentModal(event)">
+    <div class="cyber-modal-content" onclick="event.stopPropagation()">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px;">
+            <div>
+                <span class="small-label" style="color: var(--primary);">INCIDENT FORENSICS</span>
+                <h3 id="modalAlertTitle" style="margin-top: 4px; font-size: 20px;">Alert Forensics Report</h3>
+            </div>
+            <button class="btn-stop" style="padding: 4px 10px; font-size: 12px;" onclick="closeIncidentModal()">✕ Close</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+            <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Alert Identifier</div>
+                <div id="modalAlertId" style="font-family: var(--font-mono); font-weight: 700; color: var(--primary); font-size: 16px;">#--</div>
+            </div>
+            <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Recorded Update Date</div>
+                <div id="modalAlertTimestamp" style="font-family: var(--font-mono); font-weight: 600; color: #FFFFFF; font-size: 13px;">--</div>
+            </div>
+            <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Threat Classification</div>
+                <div id="modalAlertClass" style="font-weight: 700; color: #FF5252; font-size: 13px;">--</div>
+            </div>
+            <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Risk Score &amp; Confidence</div>
+                <div id="modalAlertRisk" style="font-family: var(--font-mono); font-weight: 700; color: #FF6D00; font-size: 14px;">--</div>
+            </div>
+        </div>
+
+        <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); margin-bottom: 20px;">
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Security Incident Message</div>
+            <div id="modalAlertMessage" style="color: #E2E8F0; font-size: 13px; line-height: 1.5;">--</div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <button class="btn-start" id="modalViewFullReportBtn" style="padding: 8px 18px; font-size: 13px;">View Audio Forensics Report</button>
+            <button class="btn-stop" id="modalAckBtn" style="padding: 8px 18px; font-size: 13px;">✓ Acknowledge Threat</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // State management
+    let allAlerts = [];
+    let currentFilter = 'ALL';
+    let searchQuery = '';
+    let currentPage = 1;
+    const pageSize = 10;
+    let newestAlertId = 0;
+    let isInitialLoad = true;
+    let isSmallDataMode = true;
+
+    function setDensityMode(isSmall) {
+        isSmallDataMode = isSmall;
+        const table = document.getElementById("incidentMainTable");
+        const btnSmall = document.getElementById("btnSmallDataView");
+        const btnExp = document.getElementById("btnExpandedView");
+
+        if (table) {
+            if (isSmall) table.classList.add("small-data");
+            else table.classList.remove("small-data");
+        }
+        if (btnSmall && btnExp) {
+            if (isSmall) {
+                btnSmall.classList.add("active");
+                btnExp.classList.remove("active");
+            } else {
+                btnSmall.classList.remove("active");
+                btnExp.classList.add("active");
+            }
+        }
+        renderTable();
+    }
+
+    function getApiUrl(path) {
+        if (window.location.protocol === "file:" || !window.location.hostname) {
+            return "http://localhost:8000" + path;
+        }
+        return path;
+    }
+
+    // Modern Floating Toast Notification
+    function showToast(message, type = "info", duration = 5000) {
+        let container = document.getElementById("toastContainerCustom");
+        if (!container) {
+            container = document.createElement("div");
+            container.id = "toastContainerCustom";
+            container.className = "toast-container-custom";
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement("div");
+        toast.className = `toast-custom toast-${type}`;
+        
+        let icon = "🔔";
+        if (type === "error" || type === "danger") icon = "🚨";
+        else if (type === "success") icon = "✅";
+        else if (type === "warning") icon = "⚠️";
+
+        toast.innerHTML = `<span style="font-size: 17px;">${icon}</span><span style="flex: 1;">${message}</span>`;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = "0";
+            toast.style.transform = "translateX(40px) scale(0.9)";
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
+    }
+
+    function formatAlertTimestamp(ts) {
+        if (!ts) return { date: "---", time: "---", full: "---" };
+        let d = (typeof ts === "string" && !ts.endsWith("Z") && !ts.includes("+"))
+            ? new Date(ts + "Z")
+            : new Date(ts);
+        if (isNaN(d.getTime())) return { date: ts, time: "", full: ts };
+
+        const day = d.getDate();
+        const month = d.toLocaleString('en-US', { month: 'short' });
+        const year = d.getFullYear();
+        const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+
+        return {
+            date: `${day} ${month} ${year}`,
+            time: timeStr,
+            full: d.toLocaleString()
+        };
+    }
+
+    function initAlertsLiveClock() {
+        function tick() {
+            const now = new Date();
+            const clockEl = document.getElementById("alertsLiveClock");
+            if (clockEl) clockEl.textContent = `● LIVE: ${now.toLocaleTimeString()}`;
+        }
+        tick();
+        setInterval(tick, 1000);
+    }
+
+    // Main telemetry fetching function
+    async function loadAlerts(userTriggered = false) {
+        try {
+            const resp = await fetch(getApiUrl("/api/history/alerts?limit=100"));
+            if (!resp.ok) throw new Error("Could not fetch security alerts telemetry.");
+            const alerts = await resp.json();
+
+            allAlerts = alerts;
+
+            const now = new Date();
+            const updateDateStr = now.toLocaleString();
+
+            // Update all displays of data update date
+            const topbarDateEl = document.getElementById("alertsDataUpdateDate");
+            if (topbarDateEl) topbarDateEl.textContent = updateDateStr;
+
+            const bannerDateEl = document.getElementById("bannerDataUpdateDate");
+            if (bannerDateEl) bannerDateEl.textContent = updateDateStr;
+
+            const tableDateEl = document.getElementById("tableDataUpdateDate");
+            if (tableDateEl) tableDateEl.textContent = updateDateStr;
+
+            // Compute KPI Metrics
+            const totalCount = alerts.length;
+            const activeAlerts = alerts.filter(a => !a.acknowledged);
+            const activeCount = activeAlerts.length;
+            const criticalAlerts = alerts.filter(a => (a.risk_score || 0) >= 80);
+            const criticalCount = criticalAlerts.length;
+
+            document.getElementById("kpiTotalAlerts").textContent = totalCount;
+            document.getElementById("kpiActiveAlerts").textContent = activeCount;
+            document.getElementById("kpiCriticalAlerts").textContent = criticalCount;
+
+            if (alerts.length > 0) {
+                const latestTs = formatAlertTimestamp(alerts[0].timestamp);
+                document.getElementById("kpiLatestTimestamp").textContent = `${latestTs.date}, ${latestTs.time}`;
+                document.getElementById("bannerThreatSummary").textContent = `Highest threat: ${alerts[0].classification || 'Active incident'} (${alerts[0].risk_score || 0}/100)`;
+            } else {
+                document.getElementById("kpiLatestTimestamp").textContent = "No events logged";
+                document.getElementById("bannerThreatSummary").textContent = "Clean environment. Zero threats active.";
+            }
+
+            // Update Notification Banner Badge
+            const bannerBadge = document.getElementById("bannerActiveCountBadge");
+            const bannerText = document.getElementById("bannerActiveCountText");
+            if (bannerBadge && bannerText) {
+                bannerText.textContent = `${activeCount} ACTIVE ALERTS`;
+                bannerBadge.className = activeCount > 0 ? "status-badge-active" : "status-badge-resolved";
+            }
+
+            // Update Tab Counts
+            updateTabCounts(alerts);
+
+            // New Alert Notification Logic
+            if (alerts.length > 0) {
+                const latest = alerts[0];
+                if (!isInitialLoad && latest.id > newestAlertId) {
+                    showToast(`🚨 Security Notification: New high-risk incident (#${latest.id})! Data update date: ${updateDateStr}`, "error", 6000);
+                } else if (userTriggered) {
+                    showToast(`🔔 Notification: Incident telemetry refreshed. Data update date: ${updateDateStr}`, "info", 4000);
+                }
+                newestAlertId = Math.max(newestAlertId, latest.id);
+            } else if (userTriggered) {
+                showToast(`🔔 Notification: Telemetry database synced. Data update date: ${updateDateStr}`, "success", 4000);
+            }
+            isInitialLoad = false;
+
+            // Render current page table
+            renderTable();
+        } catch (e) {
+            console.error("Telemetry fetch error:", e);
+            if (userTriggered) showToast("Error connecting to alerts telemetry: " + e.message, "error", 5000);
+        }
+    }
+
+    function updateTabCounts(alerts) {
+        const total = alerts.length;
+        const repeated = alerts.filter(a => (a.alert_type || '').includes('REPEATED') || (a.classification || '').includes('REPEATED')).length;
+        const fraud = alerts.filter(a => (a.alert_type || '').includes('FRAUD') || (a.alert_type || '').includes('SUSPICIOUS_REQUEST')).length;
+        const synthetic = alerts.filter(a => (a.classification || '').includes('SYNTHETIC') || (a.alert_type || '').includes('SYNTHETIC')).length;
+        const active = alerts.filter(a => !a.acknowledged).length;
+        const resolved = alerts.filter(a => a.acknowledged).length;
+
+        document.getElementById("tabCountAll").textContent = `(${total})`;
+        document.getElementById("tabCountRepeated").textContent = `(${repeated})`;
+        document.getElementById("tabCountFraud").textContent = `(${fraud})`;
+        document.getElementById("tabCountSynthetic").textContent = `(${synthetic})`;
+        document.getElementById("tabCountActive").textContent = `(${active})`;
+        document.getElementById("tabCountResolved").textContent = `(${resolved})`;
+    }
+
+    function setIncidentFilter(filterType, btnEl) {
+        currentFilter = filterType;
+        currentPage = 1;
+        document.querySelectorAll(".filter-tab").forEach(t => t.classList.remove("active"));
+        if (btnEl) btnEl.classList.add("active");
+        renderTable();
+    }
+
+    function handleSearchInput(e) {
+        searchQuery = (e.target.value || '').trim().toLowerCase();
+        currentPage = 1;
+        renderTable();
+    }
+
+    function getFilteredAlerts() {
+        return allAlerts.filter(a => {
+            // Tab Filter
+            if (currentFilter === 'REPEATED') {
+                const isRep = (a.alert_type || '').includes('REPEATED') || (a.classification || '').includes('REPEATED');
+                if (!isRep) return false;
+            } else if (currentFilter === 'FRAUD') {
+                const isFraud = (a.alert_type || '').includes('FRAUD') || (a.alert_type || '').includes('SUSPICIOUS_REQUEST');
+                if (!isFraud) return false;
+            } else if (currentFilter === 'SYNTHETIC') {
+                const isSynth = (a.classification || '').includes('SYNTHETIC') || (a.alert_type || '').includes('SYNTHETIC');
+                if (!isSynth) return false;
+            } else if (currentFilter === 'ACTIVE_ONLY') {
+                if (a.acknowledged) return false;
+            } else if (currentFilter === 'RESOLVED') {
+                if (!a.acknowledged) return false;
+            }
+
+            // Search Filter
+            if (searchQuery) {
+                const matchId = String(a.id).includes(searchQuery);
+                const matchClass = (a.classification || '').toLowerCase().includes(searchQuery);
+                const matchType = (a.alert_type || '').toLowerCase().includes(searchQuery);
+                const matchMsg = (a.message || '').toLowerCase().includes(searchQuery);
+                return matchId || matchClass || matchType || matchMsg;
+            }
+
+            return true;
+        });
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById("alertsTableBody");
+        const filtered = getFilteredAlerts();
+        const total = filtered.length;
+
+        if (total === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                        <div style="font-size: 16px; margin-bottom: 6px;">🔍 No security incidents matching query</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">Try clearing the search filter or switching to 'All Incidents' tab.</div>
+                    </td>
+                </tr>
+            `;
+            updatePagination(0, 0, 0);
+            return;
+        }
+
+        const totalPages = Math.ceil(total / pageSize);
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        const startIndex = (currentPage - 1) * pageSize;
+        const pageItems = filtered.slice(startIndex, startIndex + pageSize);
+
+        tbody.innerHTML = pageItems.map(a => {
+            const ts = formatAlertTimestamp(a.timestamp);
+            const confPercent = Math.round((a.confidence || 0) * 100);
+            const risk = a.risk_score || 0;
+            const isAck = a.acknowledged;
+
+            // Risk Color Calculation
+            const riskColor = risk >= 80 ? "var(--status-very-high)" : risk >= 40 ? "var(--status-moderate)" : "var(--status-safe)";
+            
+            // Threat Pill Category
+            let threatClass = "repeated-scam";
+            if ((a.alert_type || '').includes('SYNTHETIC')) threatClass = "synthetic-ai";
+            else if ((a.alert_type || '').includes('WARN')) threatClass = "warn-threat";
+
+            // Clean classification without duplicate emojis
+            const rawClass = a.classification || 'SECURITY INCIDENT';
+            const cleanClass = rawClass.replace(/[🔴⚠️🟢🚨🛡️]/g, '').trim().toUpperCase();
+
+            // Clean threat type without snake_case underscores
+            const threatText = (a.alert_type || 'GENERAL_THREAT').replace(/_/g, ' ');
+
+            // Clean Message preview with structured headline and detail
+            const cleanMsg = (a.message || 'Threat detected').replace(/SECURITY ALERT:\s*/i, '');
+            let headline = cleanMsg;
+            let detail = "";
+            if (cleanMsg.includes("Reason:")) {
+                const parts = cleanMsg.split("Reason:");
+                headline = parts[0].trim();
+                detail = "Reason: " + parts[1].trim();
+            } else if (cleanMsg.includes(".")) {
+                const dotIdx = cleanMsg.indexOf(".");
+                headline = cleanMsg.substring(0, dotIdx + 1).trim();
+                detail = cleanMsg.substring(dotIdx + 1).trim();
+            }
+
+            let compactHeadline = headline;
+            if (headline.length > 55) compactHeadline = headline.substring(0, 52) + "...";
+
+            const escapedMsg = (a.message || '').replace(/"/g, '&quot;');
+            const messageHtml = isSmallDataMode
+                ? `<div class="compact-message-box" title="${escapedMsg}" onclick="openIncidentModal(${a.id})">
+                       <span style="color: #F8FAFC; font-weight: 600;">${compactHeadline}</span>
+                       ${detail ? `<span style="color: var(--text-muted); font-size: 11px; margin-left: 6px;">• ${detail}</span>` : ''}
+                   </div>`
+                : `<div style="font-size: 12px; line-height: 1.4; word-break: break-word;">
+                       <span style="color: #F8FAFC; font-weight: 600;">${headline}</span>
+                       ${detail ? `<span style="color: var(--text-secondary); font-size: 11px; display: block; margin-top: 2px;">${detail}</span>` : ''}
+                   </div>`;
+
+            return `
+                <tr>
+                    <td style="text-align: center; white-space: nowrap;">
+                        <span class="alert-id-badge">#${a.id}</span>
+                    </td>
+                    <td style="white-space: nowrap;">
+                        <div style="font-family: var(--font-mono); font-size: 11px; line-height: 1.1;">
+                            <span style="color: #F8FAFC; font-weight: 600;">${ts.date}</span>
+                            <span style="color: var(--text-muted); font-size: 10px; margin-left: 3px;">${ts.time}</span>
+                        </div>
+                    </td>
+                    <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${cleanClass}">
+                        <div style="display: flex; align-items: center; gap: 5px; overflow: hidden;">
+                            <span class="radar-pulse-dot" style="background: ${riskColor}; box-shadow: 0 0 6px ${riskColor}; width: 6px; height: 6px; flex-shrink: 0;"></span>
+                            <span style="color: ${riskColor}; font-size: 11px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${cleanClass}</span>
+                        </div>
+                    </td>
+                    <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${threatText}">
+                        <span class="threat-pill ${threatClass}" style="max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block;">
+                            ${threatText}
+                        </span>
+                    </td>
+                    <td style="white-space: nowrap;">
+                        <div style="display: flex; align-items: center; gap: 4px;">
+                            <strong style="font-family: var(--font-mono); font-size: 11.5px; color: ${riskColor};">${risk}</strong>
+                            <span style="font-size: 9px; color: var(--text-muted);">/100</span>
+                            <div class="risk-bar-track" style="width: 22px; height: 3.5px; flex-shrink: 0;">
+                                <div class="risk-bar-fill" style="width: ${risk}%; background: ${riskColor};"></div>
+                            </div>
+                            <span style="font-size: 9.5px; color: var(--text-muted); font-family: var(--font-mono); margin-left: 1px;">${confPercent}%</span>
+                        </div>
+                    </td>
+                    <td class="col-incident-msg">
+                        ${messageHtml}
+                    </td>
+                    <td style="text-align: center; white-space: nowrap;">
+                        <span class="${isAck ? 'status-badge-resolved' : 'status-badge-active'}" style="font-size: 9.5px; padding: 2px 6px;">
+                            ${isAck ? '✓ RESOLVED' : '● ACTIVE'}
+                        </span>
+                    </td>
+                    <td style="text-align: right; white-space: nowrap;">
+                        <div class="action-btn-group" style="justify-content: flex-end; gap: 4px;">
+                            <button class="btn-action-report" style="padding: 2px 6px; font-size: 10.5px;" onclick="openIncidentModal(${a.id})" title="Inspect incident telemetry">🔍 Inspect</button>
+                            ${!isAck ? `<button class="btn-action-ack" style="padding: 2px 6px; font-size: 10.5px;" onclick="acknowledgeAlertItem(${a.id})" title="Acknowledge alert">✓</button>` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        updatePagination(startIndex + 1, Math.min(startIndex + pageSize, total), total);
+    }
+
+    function updatePagination(from, to, total) {
+        document.getElementById("paginationRangeText").textContent = total > 0 ? `${from}–${to}` : "0–0";
+        document.getElementById("paginationTotalText").textContent = total;
+
+        const totalPages = Math.ceil(total / pageSize) || 1;
+        document.getElementById("btnPrevPage").disabled = currentPage <= 1;
+        document.getElementById("btnNextPage").disabled = currentPage >= totalPages;
+
+        const numContainer = document.getElementById("pageNumberButtons");
+        let html = '';
+        for (let p = 1; p <= totalPages; p++) {
+            if (totalPages > 6 && Math.abs(p - currentPage) > 2 && p !== 1 && p !== totalPages) {
+                if (p === 2 || p === totalPages - 1) html += `<span style="color: var(--text-muted); padding: 4px 6px;">...</span>`;
+                continue;
+            }
+            html += `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="goToPage(${p})">${p}</button>`;
+        }
+        numContainer.innerHTML = html;
+    }
+
+    function changePage(delta) {
+        currentPage += delta;
+        renderTable();
+    }
+
+    function goToPage(p) {
+        currentPage = p;
+        renderTable();
+    }
+
+    async function acknowledgeAlertItem(alertId) {
+        try {
+            const resp = await fetch(getApiUrl(`/api/alerts/${alertId}/acknowledge`), { method: "POST" });
+            if (!resp.ok) throw new Error("Acknowledge request failed.");
+            
+            // Local state optimistic update
+            const target = allAlerts.find(a => a.id === alertId);
+            if (target) target.acknowledged = true;
+
+            const now = new Date().toLocaleString();
+            showToast(`✅ Notification: Alert #${alertId} acknowledged. Data update date: ${now}`, "success", 4000);
+            
+            loadAlerts();
+        } catch (err) {
+            showToast("Acknowledge failed: " + err.message, "error", 4000);
+        }
+    }
+
+    async function acknowledgeAllAlerts() {
+        const activeList = allAlerts.filter(a => !a.acknowledged);
+        if (activeList.length === 0) {
+            showToast("No active unacknowledged alerts to resolve.", "info", 3000);
+            return;
+        }
+
+        if (!confirm(`Acknowledge all ${activeList.length} active alerts as reviewed?`)) return;
+
+        try {
+            await Promise.all(activeList.map(a => fetch(getApiUrl(`/api/alerts/${a.id}/acknowledge`), { method: "POST" })));
+            const now = new Date().toLocaleString();
+            showToast(`✅ Notification: All ${activeList.length} alerts acknowledged! Data update date: ${now}`, "success", 5000);
+            loadAlerts();
+        } catch (e) {
+            showToast("Error acknowledging all alerts: " + e.message, "error", 4000);
+        }
+    }
+
+    function openIncidentModal(alertId) {
+        const item = allAlerts.find(a => a.id === alertId);
+        if (!item) return;
+
+        const ts = formatAlertTimestamp(item.timestamp);
+        document.getElementById("modalAlertId").textContent = `#${item.id}`;
+        document.getElementById("modalAlertTimestamp").textContent = `${ts.date}, ${ts.time}`;
+        document.getElementById("modalAlertClass").textContent = item.classification || "SECURITY INCIDENT";
+        document.getElementById("modalAlertRisk").textContent = `${item.risk_score || 0} / 100 (${Math.round((item.confidence || 0) * 100)}% Confidence)`;
+        document.getElementById("modalAlertMessage").textContent = item.message;
+
+        const fullReportBtn = document.getElementById("modalViewFullReportBtn");
+        const reportTarget = item.analysis_id || item.detection_id || "";
+        fullReportBtn.onclick = () => {
+            window.location.href = reportTarget ? `report.html?id=${reportTarget}` : 'report.html';
+        };
+
+        const ackBtn = document.getElementById("modalAckBtn");
+        if (item.acknowledged) {
+            ackBtn.style.display = "none";
+        } else {
+            ackBtn.style.display = "inline-flex";
+            ackBtn.onclick = () => {
+                acknowledgeAlertItem(item.id);
+                closeIncidentModal();
+            };
+        }
+
+        document.getElementById("incidentModalOverlay").classList.add("active");
+    }
+
+    function closeIncidentModal() {
+        const overlay = document.getElementById("incidentModalOverlay");
+        if (overlay) overlay.classList.remove("active");
+    }
+
+    // Hotkey ESC to close modal
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeIncidentModal();
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+        initAlertsLiveClock();
+        loadAlerts();
+        // Live auto-sync interval every 4 seconds
+        setInterval(() => loadAlerts(false), 4000);
+    });
+</script>
+
+</body>
+</html>

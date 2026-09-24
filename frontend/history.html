@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceGuard AI — Detection History</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <a class="brand" href="index.html">
+            <div class="brand-icon">🛡</div>
+            <div>
+                <h4>VoiceGuard AI</h4>
+                <span>AI Security Center</span>
+            </div>
+        </a>
+
+        <nav>
+            <a href="index.html"><span>▣</span><span>Dashboard</span></a>
+            <a href="dashboard.html"><span>🎙</span><span>Live Monitor</span></a>
+            <a href="audio.html"><span>🔊</span><span>Audio Analysis</span></a>
+            <a href="analytics.html"><span>◈</span><span>Analytics</span></a>
+            <a href="alerts.html"><span>⚠</span><span>Alerts</span></a>
+            <a class="active" href="history.html"><span>◷</span><span>History</span></a>
+            <a href="report.html"><span>📄</span><span>Reports</span></a>
+            <a href="caller_protection.html"><span>📞</span><span>Caller Protection</span></a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <a href="settings.html"><span>⚙</span><span>Settings</span></a>
+            <div class="sidebar-system-badge">
+                <span class="status-dot"></span>
+                SYSTEM ONLINE
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+        <header class="topbar">
+            <div>
+                <h2>Detection History Audit Logs</h2>
+                <p>Audit trail of voice analysis sessions, risk scores, and security reports</p>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button id="btnExportCSV" class="btn-upload">📥 Export CSV</button>
+                <button id="btnClearHistory" class="btn-stop" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: var(--status-very-high); font-size: 13px;" onclick="clearAllHistoryData()">🗑 Clear History</button>
+                <div class="system-status" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                    <span class="status-dot"></span>
+                    <span id="systemLiveClock">System Online</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- FILTERS -->
+        <section class="monitor-card" style="margin-bottom: 20px; padding: 18px;">
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <input type="text" id="searchInput" placeholder="Search filename or classification..." style="flex: 2; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: #fff; min-width: 200px;">
+                
+                <select id="filterClassification" style="flex: 1; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: #fff; min-width: 150px;">
+                    <option value="">All Classifications</option>
+                    <option value="likely_human">Likely Human</option>
+                    <option value="possibly_synthetic">Possibly Synthetic</option>
+                </select>
+
+                <select id="filterRiskLevel" style="flex: 1; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: #fff; min-width: 150px;">
+                    <option value="">All Risk Levels</option>
+                    <option value="low">LOW</option>
+                    <option value="moderate">MODERATE</option>
+                    <option value="high">HIGH</option>
+                    <option value="very_high">VERY HIGH</option>
+                </select>
+            </div>
+        </section>
+
+        <!-- HISTORY TABLE -->
+        <section class="monitor-card" style="padding: 20px;">
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>DATE / TIME</th>
+                            <th>SOURCE</th>
+                            <th>CLASSIFICATION</th>
+                            <th>HUMAN PROB.</th>
+                            <th>SYNTHETIC PROB.</th>
+                            <th>CONFIDENCE</th>
+                            <th>RISK SCORE</th>
+                            <th>RISK LEVEL</th>
+                            <th>STATUS</th>
+                            <th>ACTION</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <tr>
+                            <td colspan="11" style="text-align: center; color: var(--text-muted);">Loading detection logs...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/history.js"></script>
+</body>
+</html>
